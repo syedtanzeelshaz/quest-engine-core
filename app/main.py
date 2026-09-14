@@ -1,26 +1,51 @@
-from fastapi import Depends, FastAPI
-from sqlalchemy import text
-from sqlalchemy.orm import Session
-from app.core.database import get_db
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="Quest Engine Core Service")
+from app import __version__
+from app.api.routes import auth, health
+from app.core.bootstrap import run_startup_checks
+from app.core.database import engine
+from app.util.logger import log
 
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to Quest Engine Core API"}
-
-@app.get("/health")
-def health_check():
-    return {"status": "healthy", "service": "quest-engine-core"}
-
-@app.get("/health/db")
-def test_db_connection(db: Session = Depends(get_db)):
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     try:
-        # Run a quick raw query to test database responsiveness
-        result = db.execute(text("SELECT 1")).scalar()
-        return {
-            "status": "healthy",
-            "db_response": result
-        }
-    except Exception as e:
-        return {"status": "unhealthy", "error": str(e)}
+        run_startup_checks()
+    except Exception:
+        raise
+
+    yield
+
+    log.info("Disposing database connection engine pool...")
+    engine.dispose()
+    log.info("Shutting down Quest Engine Core application...")
+
+
+def create_app() -> FastAPI:
+    app = FastAPI(
+        title="Quest Engine Core Service",
+        version=__version__,
+        lifespan=lifespan,
+    )
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    # routes
+    app.include_router(auth.router, prefix="/auth")
+    app.include_router(health.router, prefix="/health")
+
+    @app.get("/health", tags=["System"])
+    def health_check():
+        return {"status": "ok", "service": "quest_engine_core", "version": __version__}
+
+    return app
+
+
+app = create_app()
