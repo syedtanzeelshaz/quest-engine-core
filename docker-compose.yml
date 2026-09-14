@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  quest_engine_core_db:
+    image: postgres:16-alpine
+    container_name: quest_engine_core_db
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - quest_engine_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  quest_engine_data:
+    name: quest_engine_data
