@@ -37,13 +37,11 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # routes
-    app.include_router(auth.router, prefix="/auth")
+    # Infrastructure route (Unversioned for load balancers / k8s probes) -> GET /health
     app.include_router(health.router, prefix="/health")
 
-    @app.get("/health", tags=["System"])
-    def health_check():
-        return {"status": "ok", "service": "quest_engine_core", "version": __version__}
+    # routes
+    app.include_router(auth.router, prefix="/api/v1/auth")
 
     return app
 
