@@ -26,16 +26,14 @@ This directory contains the database schema migration scripts and configuration 
 
 ## Workflow: How to Add a New Database Migration
 
-Always run Alembic commands from the **root directory of the project** (where `alembic.ini` is located), **not** from inside the `alembic/` folder.
-
 ### Step 1: Create a New Blank Revision Script
 
 Run the following CLI command to generate a new timestamped migration file under `alembic/versions/`:
 
     alembic revision -m "describe your migration here"
 
-* **What it does:** Generates an empty migration script using `script.py.mako`, with a unique revision ID and the appropriate `down_revision` mapping.
-
+* **What it does:** Generates an empty migration script using `script.py.mako` (i.e., `alembic/versions/YYYYMMDDHHMMSS_describe_your_migration_here.py`), with a unique revision ID and the appropriate `down_revision` mapping.
+* **Author metadata:** While generating the migration file, the template reads the current Git configuration (git config --get user.name and git config --get user.email) and stores the values in the generated script as author_name and author_email. This author information is for migration-file metadata only. It is not stored in `alembic.alembic_version` db table and is not used by Alembic to determine migration identity or execution state.
 ---
 
 ### Step 2: Write Your Migration Logic
@@ -61,6 +59,8 @@ For example:
 
     # revision identifiers stuff ...
 
+    # author metadata stuff ...
+
 
     def upgrade() -> None:
         op.add_column(
@@ -84,7 +84,7 @@ Use `op.execute()` only when the required operation cannot be expressed cleanly 
 
 ### Step 3: Apply the Migration
 
-Migrations can be applied either manually through the CLI or automatically during application startup. Make sure DB is accessible to apply migration successfully.
+Migrations can be applied either manually through the CLI or automatically during application startup. Make sure DB is accessible and has initial `alembic` schema in it to apply migration successfully.
 
 #### Option A: Manual CLI Execution
 
@@ -92,9 +92,33 @@ Run from the project root:
 
     alembic upgrade head
 
-This applies all pending migrations up to the latest revision and records the current revision in `alembic.alembic_version`.
+This applies all pending migrations up to the latest revision and records that revision in `alembic.alembic_version` db table.
 
 #### Option B: Automatic Application Startup
 
-In production, migrations can also be triggered automatically as part of the application bootstrap flow (see app/core/initialization/db_migrations.py)
+In production, migrations can also be triggered automatically as part of the application bootstrap flow (see `app/core/initialization/db_migrations.py`)
 The backend initialization logic invokes Alembic programmatically, allowing the database to be migrated automatically when the application starts.
+
+---
+
+## Notes
+
+### Common Alembic Commands
+
+| Command | Description |
+|---|---|
+| `alembic current` | Shows the migration revision currently recorded in the database. |
+| `alembic upgrade head` | Applies all pending migrations up to the latest revision (`head`). |
+| `alembic upgrade +1` | Applies the next migration revision in the migration chain. |
+| `alembic downgrade -1` | Reverts the most recently applied migration. |
+| `alembic revision -m "message"` | Creates a new blank migration script. |
+| `alembic history` | Displays the migration history and revision chain. |
+| `alembic heads` | Shows the current migration head revision(s). |
+| `alembic show <revision>` | Displays details of a specific migration revision. |
+
+Run these commands from the project root, where `alembic.ini` is located (not inside the alembic directory)
+
+**Important:** 
+ - `alembic revision` only creates a migration file; it does **not** modify the database. The database is changed only when a migration is executed through `alembic upgrade` or the application's startup migration flow.
+ - Once a migration has been applied to a shared environment, do not modify its `revision` or `down_revision` values. Migration revisions form Alembic's migration graph, while `alembic.alembic_version` stores the database's current position in that graph.
+

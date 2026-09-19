@@ -10,11 +10,15 @@ import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import JSONB
 
 
-# revision identifiers, used by Alembic.
+# revision identifiers
 revision = 'fb89c6b82619'
 down_revision = '454b72bd6841'
 branch_labels = None
 depends_on = None
+
+# author metadata
+author_name = 'syedtanzeelshaz'
+author_email = 'syedtanzeelshaz@gmail.com'
 
 
 def upgrade() -> None:
