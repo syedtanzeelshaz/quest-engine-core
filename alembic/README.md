@@ -34,7 +34,6 @@ Run the following CLI command to generate a new timestamped migration file under
 
 * **What it does:** Generates an empty migration script using `script.py.mako` (i.e., `alembic/versions/YYYYMMDDHHMMSS_describe_your_migration_here.py`), with a unique revision ID and the appropriate `down_revision` mapping.
 * **Author metadata:** While generating the migration file, the template reads the current Git configuration (git config --get user.name and git config --get user.email) and stores the values in the generated script as author_name and author_email. This author information is for migration-file metadata only. It is not stored in `alembic.alembic_version` db table and is not used by Alembic to determine migration identity or execution state.
----
 
 ### Step 2: Write Your Migration Logic
 
@@ -80,7 +79,6 @@ For example:
 
 Use `op.execute()` only when the required operation cannot be expressed cleanly using Alembic's standard operations, such as database-specific features or custom SQL.
 
----
 
 ### Step 3: Apply the Migration
 
