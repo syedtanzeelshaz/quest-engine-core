@@ -98,4 +98,5 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    # Leaving empty because we are not adding the audit rev foreign key constraints back in downgrade migration
     pass
