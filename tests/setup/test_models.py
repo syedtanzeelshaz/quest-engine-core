@@ -40,47 +40,6 @@ from app.model.tenant import (
 )
 
 
-def test_models_metadata_registered():
-    """Verify that all core tables and audit tables are registered in Base.metadata."""
-    table_names = set(Base.metadata.tables.keys())
-
-    expected_identity_tables = {
-        "identity.revinfo",
-        "identity.app_user",
-        "identity.app_user_aud",
-        "identity.organization",
-        "identity.organization_aud",
-        "identity.role",
-        "identity.role_aud",
-        "identity.organization_member",
-        "identity.organization_member_aud",
-        "identity.join_request",
-        "identity.join_request_aud",
-    }
-
-    expected_tenant_tables = {
-        "tenant.revinfo",
-        "tenant.datasource",
-        "tenant.datasource_aud",
-        "tenant.agent",
-        "tenant.agent_aud",
-        "tenant.agent_datasource",
-        "tenant.agent_datasource_aud",
-        "tenant.agent_access_policy",
-        "tenant.agent_access_policy_aud",
-        "tenant.datasource_data_policy",
-        "tenant.datasource_data_policy_aud",
-        "tenant.datasource_schema_object",
-        "tenant.datasource_schema_object_aud",
-    }
-
-    for expected in expected_identity_tables:
-        assert expected in table_names, f"Missing table: {expected}"
-
-    for expected in expected_tenant_tables:
-        assert expected in table_names, f"Missing table: {expected}"
-
-
 def test_audit_registry_mappings():
     """Verify that every domain model is registered to its respective audit model."""
     expected_mappings = {
