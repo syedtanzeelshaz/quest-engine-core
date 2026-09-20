@@ -4,9 +4,10 @@ Revision ID: fb89c6b82619
 Revises: 454b72bd6841
 Create Date: 2026-09-19 12:03:13.769604+00:00
 """
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import JSONB
+
+from alembic import op
 
 # revision identifiers
 revision = 'fb89c6b82619'

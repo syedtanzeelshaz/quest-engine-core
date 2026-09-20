@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+
 from app.util.logger import log
 
 router = APIRouter(tags=["Authentication"])

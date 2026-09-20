@@ -1,4 +1,11 @@
-from sqlalchemy import BigInteger, ForeignKeyConstraint, Identity, PrimaryKeyConstraint, SmallInteger, UniqueConstraint
+from sqlalchemy import (
+    BigInteger,
+    ForeignKeyConstraint,
+    Identity,
+    PrimaryKeyConstraint,
+    SmallInteger,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.audit import audited
@@ -54,5 +61,5 @@ class AgentDatasource(Base, TimestampMixin):
     datasource_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
 
     # Relationships
-    agent: Mapped["Agent"] = relationship("Agent", foreign_keys=[agent_id, org_id])  # type: ignore[name-defined]
-    datasource: Mapped["Datasource"] = relationship("Datasource", foreign_keys=[datasource_id, org_id])  # type: ignore[name-defined]
+    agent = relationship("Agent", foreign_keys=[agent_id, org_id])
+    datasource = relationship("Datasource", foreign_keys=[datasource_id, org_id])

@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -7,6 +8,7 @@ from app.api.routes import auth, health
 from app.core.bootstrap import run_startup_checks
 from app.core.database import engine
 from app.util.logger import log
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

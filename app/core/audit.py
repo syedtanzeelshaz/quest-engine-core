@@ -1,7 +1,8 @@
 import time
 from collections import defaultdict
+from collections.abc import Callable
 from enum import IntEnum
-from typing import Any, Callable, Type
+from typing import Any
 
 from sqlalchemy import event, inspect
 from sqlalchemy.orm import Session
@@ -123,13 +124,13 @@ def audit_after_flush(session: Session, flush_context: Any) -> None:
             session.add(revinfo_record)
             # Flush revinfo record to obtain generated primary key 'rev'
             session.flush([revinfo_record])
-            rev_id = getattr(revinfo_record, "rev")
+            rev_id = revinfo_record.rev
 
             for obj, revtype, snapshot in items:
                 aud_cls = AUDIT_REGISTRY[type(obj)]
                 aud_instance = aud_cls()
-                setattr(aud_instance, "rev", rev_id)
-                setattr(aud_instance, "revtype", int(revtype))
+                aud_instance.rev = rev_id
+                aud_instance.revtype = int(revtype)
 
                 if revtype == RevType.DEL and snapshot is not None:
                     for key, value in snapshot.items():

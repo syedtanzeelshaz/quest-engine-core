@@ -7,17 +7,17 @@ from app.model.tenant.datasource_schema_object import DatasourceSchemaObject, Da
 from app.model.tenant.revinfo import TenantRevInfo
 
 __all__ = [
-    "TenantRevInfo",
-    "Datasource",
-    "DatasourceAud",
     "Agent",
+    "AgentAccessPolicy",
+    "AgentAccessPolicyAud",
     "AgentAud",
     "AgentDatasource",
     "AgentDatasourceAud",
-    "AgentAccessPolicy",
-    "AgentAccessPolicyAud",
+    "Datasource",
+    "DatasourceAud",
     "DatasourceDataPolicy",
     "DatasourceDataPolicyAud",
     "DatasourceSchemaObject",
     "DatasourceSchemaObjectAud",
+    "TenantRevInfo",
 ]

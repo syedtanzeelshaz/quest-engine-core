@@ -1,6 +1,16 @@
 from datetime import datetime
 from typing import Any
-from sqlalchemy import BigInteger, ForeignKey, Identity, PrimaryKeyConstraint, SmallInteger, String, TIMESTAMP, UniqueConstraint
+
+from sqlalchemy import (
+    TIMESTAMP,
+    BigInteger,
+    ForeignKey,
+    Identity,
+    PrimaryKeyConstraint,
+    SmallInteger,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 

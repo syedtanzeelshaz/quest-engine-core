@@ -7,7 +7,6 @@ from app.core.config import settings
 
 class Base(DeclarativeBase):
     """Modern SQLAlchemy 2.0 Declarative Base class."""
-    pass
 
 
 engine = create_engine(settings.DATABASE_URL)

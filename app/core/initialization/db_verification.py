@@ -1,4 +1,5 @@
 from sqlalchemy import text
+
 from app.core.database import SessionLocal
 from app.util.logger import log
 

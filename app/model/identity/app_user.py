@@ -1,5 +1,13 @@
 from datetime import date
-from sqlalchemy import BigInteger, Date, Identity, PrimaryKeyConstraint, SmallInteger, String
+
+from sqlalchemy import (
+    BigInteger,
+    Date,
+    Identity,
+    PrimaryKeyConstraint,
+    SmallInteger,
+    String,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.audit import audited

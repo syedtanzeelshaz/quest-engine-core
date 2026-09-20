@@ -6,15 +6,15 @@ from app.model.identity.revinfo import IdentityRevInfo
 from app.model.identity.role import Role, RoleAud
 
 __all__ = [
-    "IdentityRevInfo",
     "AppUser",
     "AppUserAud",
-    "Organization",
-    "OrganizationAud",
-    "Role",
-    "RoleAud",
-    "OrganizationMember",
-    "OrganizationMemberAud",
+    "IdentityRevInfo",
     "JoinRequest",
     "JoinRequestAud",
+    "Organization",
+    "OrganizationAud",
+    "OrganizationMember",
+    "OrganizationMemberAud",
+    "Role",
+    "RoleAud",
 ]

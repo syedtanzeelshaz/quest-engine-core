@@ -1,4 +1,11 @@
-from sqlalchemy import BigInteger, ForeignKey, Identity, PrimaryKeyConstraint, SmallInteger, String
+from sqlalchemy import (
+    BigInteger,
+    ForeignKey,
+    Identity,
+    PrimaryKeyConstraint,
+    SmallInteger,
+    String,
+)
 from sqlalchemy.dialects.postgresql import ExcludeConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -62,6 +69,6 @@ class OrganizationMember(Base, TimestampMixin):
     status: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     # Relationships
-    user: Mapped["AppUser"] = relationship("AppUser", lazy="joined")  # type: ignore[name-defined]
-    organization: Mapped["Organization"] = relationship("Organization", lazy="joined")  # type: ignore[name-defined]
-    role: Mapped["Role"] = relationship("Role", lazy="joined")  # type: ignore[name-defined]
+    user = relationship("AppUser", lazy="joined")
+    organization = relationship("Organization", lazy="joined")
+    role = relationship("Role", lazy="joined")

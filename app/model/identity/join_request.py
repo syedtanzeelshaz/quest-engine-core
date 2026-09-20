@@ -1,5 +1,14 @@
 from datetime import datetime
-from sqlalchemy import BigInteger, ForeignKey, Identity, PrimaryKeyConstraint, SmallInteger, String, TIMESTAMP
+
+from sqlalchemy import (
+    TIMESTAMP,
+    BigInteger,
+    ForeignKey,
+    Identity,
+    PrimaryKeyConstraint,
+    SmallInteger,
+    String,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.audit import audited
@@ -64,7 +73,7 @@ class JoinRequest(Base, TimestampMixin):
     reviewed_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
 
     # Relationships
-    organization: Mapped["Organization"] = relationship("Organization", foreign_keys=[org_id])  # type: ignore[name-defined]
-    user: Mapped["AppUser"] = relationship("AppUser", foreign_keys=[user_id])  # type: ignore[name-defined]
-    initiator: Mapped["AppUser"] = relationship("AppUser", foreign_keys=[initiator_id])  # type: ignore[name-defined]
-    reviewer: Mapped["AppUser | None"] = relationship("AppUser", foreign_keys=[reviewed_by])  # type: ignore[name-defined]
+    organization = relationship("Organization", foreign_keys=[org_id])
+    user = relationship("AppUser", foreign_keys=[user_id])
+    initiator = relationship("AppUser", foreign_keys=[initiator_id])
+    reviewer = relationship("AppUser", foreign_keys=[reviewed_by])

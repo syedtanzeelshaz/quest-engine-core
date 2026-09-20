@@ -1,12 +1,11 @@
-import pytest
 from unittest.mock import MagicMock, patch
+
 from sqlalchemy.orm import Session
 
 from app.core.audit import (
-    AUDIT_REGISTRY,
     RevType,
-    audit_before_flush,
     audit_after_flush,
+    audit_before_flush,
 )
 from app.model.identity import AppUser, AppUserAud, IdentityRevInfo
 
@@ -37,7 +36,7 @@ def test_audit_lifecycle_flow():
     audit_before_flush(session, None, None)
     assert "audit_pending" in session.info
     assert len(session.info["audit_pending"]) == 1
-    obj, revtype, snapshot = session.info["audit_pending"][0]
+    obj, revtype, _ = session.info["audit_pending"][0]
     assert obj is user
     assert revtype == RevType.ADD
 

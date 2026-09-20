@@ -1,8 +1,31 @@
-import pytest
-from sqlalchemy import inspect
+from app.core.audit import AUDIT_REGISTRY
 from app.core.database import Base
-from app.core.audit import AUDIT_REGISTRY, RevType
-import app.model  # loads all models
+from app.model.identity import (
+    AppUser,
+    AppUserAud,
+    JoinRequest,
+    JoinRequestAud,
+    Organization,
+    OrganizationAud,
+    OrganizationMember,
+    OrganizationMemberAud,
+    Role,
+    RoleAud,
+)
+from app.model.tenant import (
+    Agent,
+    AgentAccessPolicy,
+    AgentAccessPolicyAud,
+    AgentAud,
+    AgentDatasource,
+    AgentDatasourceAud,
+    Datasource,
+    DatasourceAud,
+    DatasourceDataPolicy,
+    DatasourceDataPolicyAud,
+    DatasourceSchemaObject,
+    DatasourceSchemaObjectAud,
+)
 
 
 def test_models_metadata_registered():
@@ -48,21 +71,6 @@ def test_models_metadata_registered():
 
 def test_audit_registry_mappings():
     """Verify that every domain model is registered to its respective audit model."""
-    from app.model.identity import (
-        AppUser, AppUserAud,
-        Organization, OrganizationAud,
-        Role, RoleAud,
-        OrganizationMember, OrganizationMemberAud,
-        JoinRequest, JoinRequestAud,
-    )
-    from app.model.tenant import (
-        Datasource, DatasourceAud,
-        Agent, AgentAud,
-        AgentDatasource, AgentDatasourceAud,
-        AgentAccessPolicy, AgentAccessPolicyAud,
-        DatasourceDataPolicy, DatasourceDataPolicyAud,
-        DatasourceSchemaObject, DatasourceSchemaObjectAud,
-    )
 
     expected_mappings = {
         AppUser: AppUserAud,

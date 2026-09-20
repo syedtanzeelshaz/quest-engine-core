@@ -1,5 +1,7 @@
 import os
+
 from alembic.config import Config
+
 from alembic import command
 from app.util.logger import log
 
@@ -30,9 +32,9 @@ def run_database_migrations() -> None:
     try:
         # Programmatically execute 'alembic upgrade head'
         command.upgrade(alembic_cfg, "head")
-    except Exception:
-        log.error(f"CRITICAL: Database migration execution failed")
-        raise
+    except Exception as e:
+        log.error(f"CRITICAL: Database migration execution failed: {e}")
+        raise e
     finally:
         log.info("Database migration initialization block completed.")
 

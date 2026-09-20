@@ -1,4 +1,11 @@
-from sqlalchemy import BigInteger, Identity, PrimaryKeyConstraint, SmallInteger, String, Text
+from sqlalchemy import (
+    BigInteger,
+    Identity,
+    PrimaryKeyConstraint,
+    SmallInteger,
+    String,
+    Text,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.audit import audited

@@ -1,5 +1,13 @@
 from typing import Any
-from sqlalchemy import BigInteger, Boolean, ForeignKey, Identity, PrimaryKeyConstraint, SmallInteger
+
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    ForeignKey,
+    Identity,
+    PrimaryKeyConstraint,
+    SmallInteger,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -55,4 +63,4 @@ class DatasourceDataPolicy(Base, TimestampMixin):
     )
 
     # Relationships
-    datasource: Mapped["Datasource"] = relationship("Datasource", foreign_keys=[datasource_id])  # type: ignore[name-defined]
+    datasource = relationship("Datasource", foreign_keys=[datasource_id])

@@ -1,5 +1,14 @@
 from typing import Any
-from sqlalchemy import BigInteger, Boolean, ForeignKey, Identity, Integer, PrimaryKeyConstraint, SmallInteger
+
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    ForeignKey,
+    Identity,
+    Integer,
+    PrimaryKeyConstraint,
+    SmallInteger,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -61,4 +70,4 @@ class AgentAccessPolicy(Base, TimestampMixin):
     )
 
     # Relationships
-    agent: Mapped["Agent"] = relationship("Agent", foreign_keys=[agent_id])  # type: ignore[name-defined]
+    agent = relationship("Agent", foreign_keys=[agent_id])

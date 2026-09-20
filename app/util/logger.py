@@ -1,6 +1,7 @@
 import logging
 import sys
 
+
 def setup_logging() -> logging.Logger:
     logger = logging.getLogger("quest_engine")
     logger.setLevel(logging.INFO)
