@@ -8,6 +8,9 @@ dist/
 wheels/
 *.egg-info
 
+# exclude /docs
+docs/
+
 # Virtual environments
 .venv
 
