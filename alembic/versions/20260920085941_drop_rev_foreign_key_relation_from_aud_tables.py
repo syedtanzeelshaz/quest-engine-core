@@ -1,14 +1,10 @@
-
-"""drop rev foreign key relation from aud tables
-
+"""
+Migration: drop rev foreign key relation from aud tables
 Revision ID: 0a41e0b94f43
 Revises: 8514f07e822d
 Create Date: 2026-09-20 08:59:41.565791+00:00
-
 """
 from alembic import op
-import sqlalchemy as sa
-
 
 # revision identifiers
 revision = '0a41e0b94f43'

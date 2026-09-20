@@ -1,13 +1,11 @@
-"""create identity schema
-
+"""
+Migration: create identity schema
 Revision ID: 454b72bd6841
 Revises: None
 Create Date: 2026-09-19 12:02:07.608517+00:00
-
 """
 from alembic import op
 import sqlalchemy as sa
-
 
 # revision identifiers
 revision = '454b72bd6841'

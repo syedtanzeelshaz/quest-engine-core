@@ -1,14 +1,10 @@
-
-"""seed initial roles
-
+"""
+Migration: seed initial roles
 Revision ID: 8514f07e822d
 Revises: fb89c6b82619
 Create Date: 2026-09-19 17:28:22.419219+00:00
-
 """
 from alembic import op
-import sqlalchemy as sa
-
 
 # revision identifiers
 revision = '8514f07e822d'
