@@ -177,6 +177,13 @@ Security decisions are split cleanly between user identity resolution, Agent acc
    uv run dev
    ```
 
+4. **Run tests:**
+   ```bash
+   uv run test
+   # or
+   uv run pytest
+   ```
+
 ---
 
 ## Project Engineering Goals
