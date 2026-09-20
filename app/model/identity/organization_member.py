@@ -1,5 +1,8 @@
+from enum import StrEnum
+
 from sqlalchemy import (
     BigInteger,
+    Enum as SQLEnum,
     ForeignKey,
     Identity,
     PrimaryKeyConstraint,
@@ -12,6 +15,11 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.audit import audited
 from app.core.database import Base
 from app.model.base import TimestampMixin
+
+
+class OrgMemberStatus(StrEnum):
+    ACTIVE = "ACTIVE"
+    INACTIVE = "INACTIVE"
 
 
 class OrganizationMemberAud(Base, TimestampMixin):
@@ -66,7 +74,10 @@ class OrganizationMember(Base, TimestampMixin):
         ForeignKey("identity.role.id", ondelete="CASCADE"),
         nullable=False,
     )
-    status: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    status: Mapped[OrgMemberStatus | None] = mapped_column(
+        SQLEnum(OrgMemberStatus, native_enum=False, length=50),
+        nullable=True,
+    )
 
     # Relationships
     user = relationship("AppUser", lazy="joined")

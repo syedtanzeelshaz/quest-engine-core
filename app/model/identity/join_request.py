@@ -1,8 +1,10 @@
 from datetime import datetime
+from enum import StrEnum
 
 from sqlalchemy import (
     TIMESTAMP,
     BigInteger,
+    Enum as SQLEnum,
     ForeignKey,
     Identity,
     PrimaryKeyConstraint,
@@ -14,6 +16,19 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.audit import audited
 from app.core.database import Base
 from app.model.base import TimestampMixin
+
+
+class JoinRequestType(StrEnum):
+    INVITATION = "INVITATION"
+    USER_REQUEST = "USER_REQUEST"
+
+
+class JoinRequestStatus(StrEnum):
+    APPROVED = "APPROVED"
+    DRAFT = "DRAFT"
+    PENDING = "PENDING"
+    REJECTED = "REJECTED"
+    REVOKED = "REVOKED"
 
 
 class JoinRequestAud(Base, TimestampMixin):
@@ -63,8 +78,14 @@ class JoinRequest(Base, TimestampMixin):
         ForeignKey("identity.app_user.id", ondelete="CASCADE"),
         nullable=False,
     )
-    type: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    status: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    type: Mapped[JoinRequestType | None] = mapped_column(
+        SQLEnum(JoinRequestType, native_enum=False, length=50),
+        nullable=True,
+    )
+    status: Mapped[JoinRequestStatus | None] = mapped_column(
+        SQLEnum(JoinRequestStatus, native_enum=False, length=50),
+        nullable=True,
+    )
     reviewed_by: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey("identity.app_user.id", ondelete="SET NULL"),

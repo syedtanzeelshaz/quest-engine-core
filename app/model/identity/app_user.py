@@ -1,8 +1,10 @@
 from datetime import date
+from enum import StrEnum
 
 from sqlalchemy import (
     BigInteger,
     Date,
+    Enum as SQLEnum,
     Identity,
     PrimaryKeyConstraint,
     SmallInteger,
@@ -13,6 +15,13 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.audit import audited
 from app.core.database import Base
 from app.model.base import TimestampMixin
+
+
+class AppUserStatus(StrEnum):
+    ACTIVE = "ACTIVE"
+    DELETED = "DELETED"
+    INACTIVE = "INACTIVE"
+    SUSPENDED = "SUSPENDED"
 
 
 class AppUserAud(Base, TimestampMixin):
@@ -64,4 +73,7 @@ class AppUser(Base, TimestampMixin):
     country: Mapped[str | None] = mapped_column(String(100), nullable=True)
     date_of_birth: Mapped[date | None] = mapped_column(Date(), nullable=True)
     phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    status: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    status: Mapped[AppUserStatus | None] = mapped_column(
+        SQLEnum(AppUserStatus, native_enum=False, length=50),
+        nullable=True,
+    )

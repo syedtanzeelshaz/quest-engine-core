@@ -1,9 +1,11 @@
 from datetime import datetime
+from enum import StrEnum
 from typing import Any
 
 from sqlalchemy import (
     TIMESTAMP,
     BigInteger,
+    Enum as SQLEnum,
     ForeignKey,
     Identity,
     PrimaryKeyConstraint,
@@ -17,6 +19,37 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.audit import audited
 from app.core.database import Base
 from app.model.base import TimestampMixin
+
+
+class DatasourceCategory(StrEnum):
+    DATABASE = "DATABASE"
+    DOCUMENT = "DOCUMENT"
+    FILE = "FILE"
+
+
+class DatasourceType(StrEnum):
+    MONGODB = "MONGODB"
+    MYSQL = "MYSQL"
+    NOTION = "NOTION"
+    PDF = "PDF"
+    POSTGRESQL = "POSTGRESQL"
+
+
+class DatasourceApprovalStatus(StrEnum):
+    APPROVED = "APPROVED"
+    DRAFT = "DRAFT"
+    PENDING = "PENDING"
+    REJECTED = "REJECTED"
+    REVOKED = "REVOKED"
+
+
+class DatasourceStatus(StrEnum):
+    ACTIVE = "ACTIVE"
+    CONNECTION_FAILED = "CONNECTION_FAILED"
+    DELETED = "DELETED"
+    DRAFT = "DRAFT"
+    INACTIVE = "INACTIVE"
+    METADATA_DISCOVERY_FAILED = "METADATA_DISCOVERY_FAILED"
 
 
 class DatasourceAud(Base, TimestampMixin):
@@ -62,14 +95,41 @@ class Datasource(Base, TimestampMixin):
         nullable=False,
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    category: Mapped[str] = mapped_column(String(50), nullable=False)
-    type: Mapped[str] = mapped_column(String(50), nullable=False)
+    category: Mapped[DatasourceCategory] = mapped_column(
+        SQLEnum(DatasourceCategory, native_enum=False, length=50),
+        nullable=False,
+    )
+    type: Mapped[DatasourceType] = mapped_column(
+        SQLEnum(DatasourceType, native_enum=False, length=50),
+        nullable=False,
+    )
     connection_config: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
-    approval_status: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    status: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    approval_status: Mapped[DatasourceApprovalStatus | None] = mapped_column(
+        SQLEnum(DatasourceApprovalStatus, native_enum=False, length=50),
+        nullable=True,
+    )
+    status: Mapped[DatasourceStatus | None] = mapped_column(
+        SQLEnum(DatasourceStatus, native_enum=False, length=50),
+        nullable=True,
+    )
     reviewed_by: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey("identity.app_user.id", ondelete="SET NULL"),
         nullable=True,
     )
     reviewed_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+
+
+DATASOURCE_TYPES_BY_CATEGORY: dict[DatasourceCategory, set[DatasourceType]] = {
+    DatasourceCategory.DATABASE: {
+        DatasourceType.MONGODB,
+        DatasourceType.MYSQL,
+        DatasourceType.POSTGRESQL,
+    },
+    DatasourceCategory.DOCUMENT: {
+        DatasourceType.NOTION,
+    },
+    DatasourceCategory.FILE: {
+        DatasourceType.PDF,
+    },
+}

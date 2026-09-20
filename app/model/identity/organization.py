@@ -1,5 +1,8 @@
+from enum import StrEnum
+
 from sqlalchemy import (
     BigInteger,
+    Enum as SQLEnum,
     Identity,
     PrimaryKeyConstraint,
     SmallInteger,
@@ -11,6 +14,13 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.audit import audited
 from app.core.database import Base
 from app.model.base import TimestampMixin
+
+
+class OrgStatus(StrEnum):
+    ACTIVE = "ACTIVE"
+    DELETED = "DELETED"
+    DRAFT = "DRAFT"
+    INACTIVE = "INACTIVE"
 
 
 class OrganizationAud(Base, TimestampMixin):
@@ -52,4 +62,7 @@ class Organization(Base, TimestampMixin):
         nullable=False,
     )
     description: Mapped[str | None] = mapped_column(Text(), nullable=True)
-    status: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    status: Mapped[OrgStatus | None] = mapped_column(
+        SQLEnum(OrgStatus, native_enum=False, length=50),
+        nullable=True,
+    )

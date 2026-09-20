@@ -1,5 +1,8 @@
+from enum import StrEnum
+
 from sqlalchemy import (
     BigInteger,
+    Enum as SQLEnum,
     ForeignKey,
     Identity,
     PrimaryKeyConstraint,
@@ -13,6 +16,13 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.audit import audited
 from app.core.database import Base
 from app.model.base import TimestampMixin
+
+
+class AgentStatus(StrEnum):
+    ACTIVE = "ACTIVE"
+    DELETED = "DELETED"
+    DRAFT = "DRAFT"
+    INACTIVE = "INACTIVE"
 
 
 class AgentAud(Base, TimestampMixin):
@@ -56,4 +66,7 @@ class Agent(Base, TimestampMixin):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text(), nullable=True)
     system_instructions: Mapped[str | None] = mapped_column(Text(), nullable=True)
-    status: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    status: Mapped[AgentStatus | None] = mapped_column(
+        SQLEnum(AgentStatus, native_enum=False, length=50),
+        nullable=True,
+    )

@@ -1,7 +1,9 @@
+from enum import StrEnum
 from typing import Any
 
 from sqlalchemy import (
     BigInteger,
+    Enum as SQLEnum,
     ForeignKey,
     Identity,
     PrimaryKeyConstraint,
@@ -14,6 +16,13 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.audit import audited
 from app.core.database import Base
 from app.model.base import TimestampMixin
+
+
+class SchemaObjectType(StrEnum):
+    TABLE = "TABLE"
+    VIEW = "VIEW"
+    COLLECTION = "COLLECTION"
+    COLUMN = "COLUMN"
 
 
 class DatasourceSchemaObjectAud(Base, TimestampMixin):
@@ -56,7 +65,10 @@ class DatasourceSchemaObject(Base, TimestampMixin):
         ForeignKey("tenant.datasource.id", ondelete="CASCADE"),
         nullable=False,
     )
-    object_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    object_type: Mapped[SchemaObjectType] = mapped_column(
+        SQLEnum(SchemaObjectType, native_enum=False, length=50),
+        nullable=False,
+    )
     object_name: Mapped[str] = mapped_column(String(255), nullable=False)
     metadata_payload: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
 

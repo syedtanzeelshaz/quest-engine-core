@@ -62,4 +62,4 @@ class AgentDatasource(Base, TimestampMixin):
 
     # Relationships
     agent = relationship("Agent", foreign_keys=[agent_id, org_id])
-    datasource = relationship("Datasource", foreign_keys=[datasource_id, org_id])
+    datasource = relationship("Datasource", foreign_keys=[datasource_id, org_id], overlaps="agent")
