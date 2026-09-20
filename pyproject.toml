@@ -17,16 +17,16 @@ dependencies = [
     "pydantic-settings>=2.2.1",
 ]
 
+[project.scripts]
+dev = "app:main"
+test = "pytest:main"
+
 [dependency-groups]
 dev = [
     "pytest>=8.1.1",
     "httpx>=0.27.0",
     "ruff>=0.3.4",
 ]
-
-[project.scripts]
-dev = "app:main"
-test = "pytest:main"
 
 [build-system]
 requires = ["hatchling"]
