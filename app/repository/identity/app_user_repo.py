@@ -15,7 +15,7 @@ class AppUserRepository(BaseRepository[AppUser]):
 
     def find_by_email(self, email: str) -> AppUser | None:
         """Fetch a user by their unique email address."""
-        stmt = select(AppUser).where(AppUser.email == email)
+        stmt = select(AppUser).where(AppUser.email == email).limit(1)
         return self.session.scalar(stmt)
 
     def exists_by_email(self, email: str) -> bool:

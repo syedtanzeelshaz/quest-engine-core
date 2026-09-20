@@ -10,18 +10,10 @@ from app.repository.base import BaseRepository
 
 
 class DatasourceRepository(BaseRepository[Datasource]):
-    """Data access repository for tenant.datasource enforcing org_id isolation."""
+    """Data access repository for tenant.datasource."""
 
     def __init__(self, session: Session) -> None:
         super().__init__(Datasource, session)
-
-    def find_by_id_and_org(self, id: int, org_id: int) -> Datasource | None:
-        """Fetch a single datasource by ID scoped to an organization."""
-        stmt = select(Datasource).where(
-            Datasource.id == id,
-            Datasource.org_id == org_id,
-        )
-        return self.session.scalar(stmt)
 
     def find_all_by_org(
         self,
@@ -38,37 +30,22 @@ class DatasourceRepository(BaseRepository[Datasource]):
         )
         return list(self.session.scalars(stmt).all())
 
-    def delete_by_id_and_org(self, id: int, org_id: int) -> bool:
-        """Delete a datasource by ID scoped to an organization."""
-        obj = self.find_by_id_and_org(id, org_id)
-        if obj is not None:
-            self.session.delete(obj)
-            self.session.flush()
-            return True
-        return False
-
     def count_by_org(self, org_id: int) -> int:
         """Count total datasources belonging to an organization."""
-        stmt = select(func.count()).select_from(Datasource).where(Datasource.org_id == org_id)
+        stmt = (
+            select(func.count())
+            .select_from(Datasource)
+            .where(Datasource.org_id == org_id)
+        )
         return self.session.scalar(stmt) or 0
 
-    def exists_by_id_and_org(self, id: int, org_id: int) -> bool:
-        """Check whether a datasource exists for the given ID and organization."""
-        stmt = (
-            select(1)
-            .select_from(Datasource)
-            .where(Datasource.id == id, Datasource.org_id == org_id)
-            .limit(1)
-        )
-        return self.session.scalar(stmt) is not None
-
-    def find_by_name_and_org(self, name: str, org_id: int) -> Datasource | None:
-        """Fetch a datasource by name within an organization."""
+    def find_all_by_name_and_org(self, name: str, org_id: int) -> list[Datasource]:
+        """Fetch all datasources matching a name within an organization."""
         stmt = select(Datasource).where(
             Datasource.name == name,
             Datasource.org_id == org_id,
         )
-        return self.session.scalar(stmt)
+        return list(self.session.scalars(stmt).all())
 
     def exists_by_name_and_org(self, name: str, org_id: int) -> bool:
         """Check whether a datasource with the given name exists in an organization."""
@@ -80,7 +57,7 @@ class DatasourceRepository(BaseRepository[Datasource]):
         )
         return self.session.scalar(stmt) is not None
 
-    def find_active_by_org(
+    def find_all_active_by_org(
         self,
         org_id: int,
         skip: int = 0,
@@ -99,7 +76,7 @@ class DatasourceRepository(BaseRepository[Datasource]):
         )
         return list(self.session.scalars(stmt).all())
 
-    def find_by_approval_status(
+    def find_all_by_org_and_approval_status(
         self,
         org_id: int,
         approval_status: DatasourceApprovalStatus,
@@ -118,7 +95,7 @@ class DatasourceRepository(BaseRepository[Datasource]):
         )
         return list(self.session.scalars(stmt).all())
 
-    def find_by_status(
+    def find_all_by_org_and_status(
         self,
         org_id: int,
         status: DatasourceStatus,

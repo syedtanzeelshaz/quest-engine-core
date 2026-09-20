@@ -14,17 +14,13 @@ class AgentAccessPolicyRepository(BaseRepository[AgentAccessPolicy]):
     def find_all_by_agent(
         self,
         agent_id: int,
-        org_id: int,
         skip: int = 0,
         limit: int = 100,
     ) -> list[AgentAccessPolicy]:
         """Fetch all access policies defined for an agent."""
         stmt = (
             select(AgentAccessPolicy)
-            .where(
-                AgentAccessPolicy.agent_id == agent_id,
-                AgentAccessPolicy.org_id == org_id,
-            )
+            .where(AgentAccessPolicy.agent_id == agent_id)
             .offset(skip)
             .limit(limit)
         )

@@ -16,19 +16,16 @@ from app.repository.tenant import (
 )
 
 __all__ = [
-    # Base
-    "BaseRepository",
-    # Identity
+    "AgentAccessPolicyRepository",
+    "AgentDatasourceRepository",
+    "AgentRepository",
     "AppUserRepository",
+    "BaseRepository",
+    "DatasourceDataPolicyRepository",
+    "DatasourceRepository",
+    "DatasourceSchemaObjectRepository",
     "JoinRequestRepository",
     "OrganizationMemberRepository",
     "OrganizationRepository",
     "RoleRepository",
-    # Tenant
-    "AgentAccessPolicyRepository",
-    "AgentDatasourceRepository",
-    "AgentRepository",
-    "DatasourceDataPolicyRepository",
-    "DatasourceRepository",
-    "DatasourceSchemaObjectRepository",
 ]

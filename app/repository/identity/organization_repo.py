@@ -15,12 +15,17 @@ class OrganizationRepository(BaseRepository[Organization]):
 
     def find_by_slug(self, slug: str) -> Organization | None:
         """Fetch an organization by its unique URL slug."""
-        stmt = select(Organization).where(Organization.slug == slug)
+        stmt = select(Organization).where(Organization.slug == slug).limit(1)
         return self.session.scalar(stmt)
 
     def exists_by_slug(self, slug: str) -> bool:
         """Check whether an organization with the given slug exists."""
-        stmt = select(1).select_from(Organization).where(Organization.slug == slug).limit(1)
+        stmt = (
+            select(1)
+            .select_from(Organization)
+            .where(Organization.slug == slug)
+            .limit(1)
+        )
         return self.session.scalar(stmt) is not None
 
     def find_all_by_status_in(

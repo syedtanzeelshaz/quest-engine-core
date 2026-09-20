@@ -14,17 +14,13 @@ class DatasourceDataPolicyRepository(BaseRepository[DatasourceDataPolicy]):
     def find_all_by_datasource(
         self,
         datasource_id: int,
-        org_id: int,
         skip: int = 0,
         limit: int = 100,
     ) -> list[DatasourceDataPolicy]:
         """Fetch all data policies defined for a datasource."""
         stmt = (
             select(DatasourceDataPolicy)
-            .where(
-                DatasourceDataPolicy.datasource_id == datasource_id,
-                DatasourceDataPolicy.org_id == org_id,
-            )
+            .where(DatasourceDataPolicy.datasource_id == datasource_id)
             .offset(skip)
             .limit(limit)
         )
