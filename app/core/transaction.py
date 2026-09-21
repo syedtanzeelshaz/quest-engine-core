@@ -16,7 +16,8 @@ F = TypeVar("F", bound=Callable[..., Any])
 
 
 def _resolve_session(*args: Any, **kwargs: Any) -> tuple[Session | None, bool]:
-    """Resolve an active database session.
+    """
+    Resolve an active database session.
 
     Returns:
         tuple[Session | None, bool]: (session, is_newly_created)
@@ -55,7 +56,8 @@ def _resolve_session(*args: Any, **kwargs: Any) -> tuple[Session | None, bool]:
 
 
 def transactional(func: F) -> F:
-    """Decorator providing declarative database transaction boundary management.
+    """
+    Decorator providing declarative database transaction boundary management.
 
     - Joins the current active transaction or opens a new one.
     - If a transaction is already active, creates a SAVEPOINT (nested transaction).
