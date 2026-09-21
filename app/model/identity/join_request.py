@@ -10,6 +10,7 @@ from sqlalchemy import (
     PrimaryKeyConstraint,
     SmallInteger,
     String,
+    Text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -50,6 +51,7 @@ class JoinRequestAud(Base):
     status: Mapped[str | None] = mapped_column(String(50), nullable=True)
     reviewed_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     reviewed_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    message: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     created_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
     created_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
@@ -97,6 +99,7 @@ class JoinRequest(Base, AuditMetadataMixin):
         nullable=True,
     )
     reviewed_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    message: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
     organization = relationship("Organization", foreign_keys=[org_id])
