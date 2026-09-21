@@ -64,8 +64,30 @@ def test_base_repository_crud():
     mock_session.scalar.return_value = 42
     assert repo.count() == 42
 
-    # 8. Delete by ID
+    # 8. Delete
+    mock_session.reset_mock()
+    repo.delete(user)
+    mock_session.delete.assert_called_once_with(user)
+    mock_session.flush.assert_called_once()
+
+    # 9. Delete by ID
+    mock_session.reset_mock()
     mock_session.get.return_value = user
     deleted = repo.delete_by_id(1)
     assert deleted is True
     mock_session.delete.assert_called_once_with(user)
+    mock_session.flush.assert_called_once()
+
+    # 10. Delete all
+    mock_session.reset_mock()
+    repo.delete_all([user])
+    mock_session.delete.assert_called_once_with(user)
+    mock_session.flush.assert_called_once()
+
+    # 11. Delete all by IDs
+    mock_session.reset_mock()
+    mock_session.scalars.return_value.all.return_value = [user]
+    deleted_count = repo.delete_all_by_ids([1])
+    assert deleted_count == 1
+    mock_session.delete.assert_called_once_with(user)
+    mock_session.flush.assert_called_once()

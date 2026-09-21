@@ -83,6 +83,24 @@ class BaseRepository(Generic[ModelType]):
             return True
         return False
 
+    def delete_all(self, objs: Sequence[ModelType]) -> None:
+        """Delete multiple tracked records."""
+        if not objs:
+            return
+        for obj in objs:
+            self.session.delete(obj)
+        self.session.flush()
+
+    def delete_all_by_ids(self, ids: Sequence[int]) -> int:
+        """Fetch records by IDs and delete them."""
+        if not ids:
+            return 0
+        objs = self.find_all_by_ids(ids)
+        for obj in objs:
+            self.session.delete(obj)
+        self.session.flush()
+        return len(objs)
+
     def count(self) -> int:
         """Count total rows in the table."""
         stmt = select(func.count()).select_from(self.model)
