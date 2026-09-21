@@ -1,6 +1,7 @@
 import time
 from collections import defaultdict
 from collections.abc import Callable
+from datetime import datetime, timezone
 from enum import IntEnum
 from typing import Any
 
@@ -57,9 +58,15 @@ def audit_before_flush(session: Session, flush_context: Any, instances: Any) -> 
 
     pending: list[tuple[Any, RevType, dict[str, Any] | None]] = []
 
+    now_utc = datetime.now(timezone.utc)
+
     # 1. New instances (ADD)
     for obj in session.new:
         if type(obj) in AUDIT_REGISTRY:
+            if hasattr(obj, "created_at") and obj.created_at is None:
+                obj.created_at = now_utc
+            if hasattr(obj, "updated_at") and obj.updated_at is None:
+                obj.updated_at = now_utc
             pending.append((obj, RevType.ADD, None))
 
     # 2. Dirty instances (MOD)
@@ -73,6 +80,8 @@ def audit_before_flush(session: Session, flush_context: Any, instances: Any) -> 
                     has_changes = True
                     break
             if has_changes:
+                if hasattr(obj, "updated_at"):
+                    obj.updated_at = now_utc
                 pending.append((obj, RevType.MOD, None))
 
     # 3. Deleted instances (DEL) - snapshot values before removal

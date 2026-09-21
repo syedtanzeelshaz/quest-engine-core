@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from enum import StrEnum
 
 from sqlalchemy import (
@@ -9,12 +9,13 @@ from sqlalchemy import (
     PrimaryKeyConstraint,
     SmallInteger,
     String,
+    TIMESTAMP,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.audit import audited
 from app.core.database import Base
-from app.model.base import TimestampMixin
+from app.model.base import AuditMetadataMixin
 
 
 class AppUserStatus(StrEnum):
@@ -24,7 +25,7 @@ class AppUserStatus(StrEnum):
     SUSPENDED = "SUSPENDED"
 
 
-class AppUserAud(Base, TimestampMixin):
+class AppUserAud(Base):
     """Audit table for identity.app_user."""
     __tablename__ = "app_user_aud"
     __table_args__ = (
@@ -46,9 +47,14 @@ class AppUserAud(Base, TimestampMixin):
     phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
     status: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
+    created_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    created_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    updated_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    updated_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+
 
 @audited(AppUserAud)
-class AppUser(Base, TimestampMixin):
+class AppUser(Base, AuditMetadataMixin):
     """Application user entity."""
     __tablename__ = "app_user"
     __table_args__ = {"schema": "identity"}

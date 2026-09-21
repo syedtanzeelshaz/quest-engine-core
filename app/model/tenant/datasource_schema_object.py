@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
@@ -9,13 +10,14 @@ from sqlalchemy import (
     PrimaryKeyConstraint,
     SmallInteger,
     String,
+    TIMESTAMP,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.audit import audited
 from app.core.database import Base
-from app.model.base import TimestampMixin
+from app.model.base import AuditMetadataMixin
 
 
 class SchemaObjectType(StrEnum):
@@ -25,7 +27,7 @@ class SchemaObjectType(StrEnum):
     COLUMN = "COLUMN"
 
 
-class DatasourceSchemaObjectAud(Base, TimestampMixin):
+class DatasourceSchemaObjectAud(Base):
     """Audit table for tenant.datasource_schema_object."""
     __tablename__ = "datasource_schema_object_aud"
     __table_args__ = (
@@ -43,9 +45,14 @@ class DatasourceSchemaObjectAud(Base, TimestampMixin):
     object_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     metadata_payload: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
 
+    created_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    created_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    updated_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    updated_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+
 
 @audited(DatasourceSchemaObjectAud)
-class DatasourceSchemaObject(Base, TimestampMixin):
+class DatasourceSchemaObject(Base, AuditMetadataMixin):
     """Discovered schema object (table, view, collection, column) of a datasource."""
     __tablename__ = "datasource_schema_object"
     __table_args__ = {"schema": "tenant"}

@@ -15,7 +15,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.audit import audited
 from app.core.database import Base
-from app.model.base import TimestampMixin
+from app.model.base import AuditMetadataMixin
 
 
 class JoinRequestType(StrEnum):
@@ -31,7 +31,7 @@ class JoinRequestStatus(StrEnum):
     REVOKED = "REVOKED"
 
 
-class JoinRequestAud(Base, TimestampMixin):
+class JoinRequestAud(Base):
     """Audit table for identity.join_request."""
     __tablename__ = "join_request_aud"
     __table_args__ = (
@@ -51,9 +51,14 @@ class JoinRequestAud(Base, TimestampMixin):
     reviewed_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     reviewed_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
 
+    created_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    created_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    updated_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    updated_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+
 
 @audited(JoinRequestAud)
-class JoinRequest(Base, TimestampMixin):
+class JoinRequest(Base, AuditMetadataMixin):
     """Organization join request or invitation entity."""
     __tablename__ = "join_request"
     __table_args__ = {"schema": "identity"}

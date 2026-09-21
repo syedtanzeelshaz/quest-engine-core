@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy import (
@@ -7,16 +8,18 @@ from sqlalchemy import (
     Identity,
     PrimaryKeyConstraint,
     SmallInteger,
+    String,
+    TIMESTAMP,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.audit import audited
 from app.core.database import Base
-from app.model.base import TimestampMixin
+from app.model.base import AuditMetadataMixin
 
 
-class DatasourceDataPolicyAud(Base, TimestampMixin):
+class DatasourceDataPolicyAud(Base):
     """Audit table for tenant.datasource_data_policy."""
     __tablename__ = "datasource_data_policy_aud"
     __table_args__ = (
@@ -33,9 +36,14 @@ class DatasourceDataPolicyAud(Base, TimestampMixin):
     policy_definition: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     is_enabled: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
 
+    created_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    created_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    updated_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    updated_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+
 
 @audited(DatasourceDataPolicyAud)
-class DatasourceDataPolicy(Base, TimestampMixin):
+class DatasourceDataPolicy(Base, AuditMetadataMixin):
     """Policy governing field and table level data access restrictions on a datasource."""
     __tablename__ = "datasource_data_policy"
     __table_args__ = {"schema": "tenant"}

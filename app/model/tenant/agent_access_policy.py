@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy import (
@@ -8,16 +9,18 @@ from sqlalchemy import (
     Integer,
     PrimaryKeyConstraint,
     SmallInteger,
+    String,
+    TIMESTAMP,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.audit import audited
 from app.core.database import Base
-from app.model.base import TimestampMixin
+from app.model.base import AuditMetadataMixin
 
 
-class AgentAccessPolicyAud(Base, TimestampMixin):
+class AgentAccessPolicyAud(Base):
     """Audit table for tenant.agent_access_policy."""
     __tablename__ = "agent_access_policy_aud"
     __table_args__ = (
@@ -35,9 +38,14 @@ class AgentAccessPolicyAud(Base, TimestampMixin):
     is_enabled: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     priority: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
+    created_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    created_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    updated_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    updated_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+
 
 @audited(AgentAccessPolicyAud)
-class AgentAccessPolicy(Base, TimestampMixin):
+class AgentAccessPolicy(Base, AuditMetadataMixin):
     """Policy governing which users/roles may interact with an Agent."""
     __tablename__ = "agent_access_policy"
     __table_args__ = {"schema": "tenant"}

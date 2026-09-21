@@ -1,4 +1,5 @@
 from datetime import datetime
+from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
@@ -11,6 +12,7 @@ from sqlalchemy import (
     PrimaryKeyConstraint,
     SmallInteger,
     String,
+    TIMESTAMP,
     UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import JSONB
@@ -18,7 +20,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.audit import audited
 from app.core.database import Base
-from app.model.base import TimestampMixin
+from app.model.base import AuditMetadataMixin
 
 
 class DatasourceCategory(StrEnum):
@@ -52,7 +54,7 @@ class DatasourceStatus(StrEnum):
     METADATA_DISCOVERY_FAILED = "METADATA_DISCOVERY_FAILED"
 
 
-class DatasourceAud(Base, TimestampMixin):
+class DatasourceAud(Base):
     """Audit table for tenant.datasource."""
     __tablename__ = "datasource_aud"
     __table_args__ = (
@@ -74,9 +76,14 @@ class DatasourceAud(Base, TimestampMixin):
     reviewed_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     reviewed_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
 
+    created_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    created_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    updated_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    updated_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+
 
 @audited(DatasourceAud)
-class Datasource(Base, TimestampMixin):
+class Datasource(Base, AuditMetadataMixin):
     """Datasource entity representing an external connected customer data source."""
     __tablename__ = "datasource"
     __table_args__ = (

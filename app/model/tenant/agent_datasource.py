@@ -1,19 +1,22 @@
+from datetime import datetime
+
 from sqlalchemy import (
     BigInteger,
     ForeignKeyConstraint,
     Identity,
     PrimaryKeyConstraint,
     SmallInteger,
+    TIMESTAMP,
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.audit import audited
 from app.core.database import Base
-from app.model.base import TimestampMixin
+from app.model.base import AuditMetadataMixin
 
 
-class AgentDatasourceAud(Base, TimestampMixin):
+class AgentDatasourceAud(Base):
     """Audit table for tenant.agent_datasource."""
     __tablename__ = "agent_datasource_aud"
     __table_args__ = (
@@ -29,9 +32,14 @@ class AgentDatasourceAud(Base, TimestampMixin):
     org_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     datasource_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
 
+    created_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    created_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    updated_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    updated_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+
 
 @audited(AgentDatasourceAud)
-class AgentDatasource(Base, TimestampMixin):
+class AgentDatasource(Base, AuditMetadataMixin):
     """Mapping between an Agent and an authorized Datasource within the same organization."""
     __tablename__ = "agent_datasource"
     __table_args__ = (

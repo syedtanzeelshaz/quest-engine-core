@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import StrEnum
 
 from sqlalchemy import (
@@ -9,13 +10,14 @@ from sqlalchemy import (
     SmallInteger,
     String,
     Text,
+    TIMESTAMP,
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.audit import audited
 from app.core.database import Base
-from app.model.base import TimestampMixin
+from app.model.base import AuditMetadataMixin
 
 
 class AgentStatus(StrEnum):
@@ -25,7 +27,7 @@ class AgentStatus(StrEnum):
     INACTIVE = "INACTIVE"
 
 
-class AgentAud(Base, TimestampMixin):
+class AgentAud(Base):
     """Audit table for tenant.agent."""
     __tablename__ = "agent_aud"
     __table_args__ = (
@@ -43,9 +45,14 @@ class AgentAud(Base, TimestampMixin):
     system_instructions: Mapped[str | None] = mapped_column(Text(), nullable=True)
     status: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
+    created_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    created_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    updated_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    updated_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+
 
 @audited(AgentAud)
-class Agent(Base, TimestampMixin):
+class Agent(Base, AuditMetadataMixin):
     """AI Agent entity created by an organization."""
     __tablename__ = "agent"
     __table_args__ = (

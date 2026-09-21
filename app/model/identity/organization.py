@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import StrEnum
 
 from sqlalchemy import (
@@ -8,12 +9,13 @@ from sqlalchemy import (
     SmallInteger,
     String,
     Text,
+    TIMESTAMP,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.audit import audited
 from app.core.database import Base
-from app.model.base import TimestampMixin
+from app.model.base import AuditMetadataMixin
 
 
 class OrgStatus(StrEnum):
@@ -23,7 +25,7 @@ class OrgStatus(StrEnum):
     INACTIVE = "INACTIVE"
 
 
-class OrganizationAud(Base, TimestampMixin):
+class OrganizationAud(Base):
     """Audit table for identity.organization."""
     __tablename__ = "organization_aud"
     __table_args__ = (
@@ -40,9 +42,14 @@ class OrganizationAud(Base, TimestampMixin):
     description: Mapped[str | None] = mapped_column(Text(), nullable=True)
     status: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
+    created_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    created_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    updated_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    updated_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+
 
 @audited(OrganizationAud)
-class Organization(Base, TimestampMixin):
+class Organization(Base, AuditMetadataMixin):
     """Tenant organization entity."""
     __tablename__ = "organization"
     __table_args__ = {"schema": "identity"}

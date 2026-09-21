@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import StrEnum
 
 from sqlalchemy import (
@@ -8,13 +9,14 @@ from sqlalchemy import (
     PrimaryKeyConstraint,
     SmallInteger,
     String,
+    TIMESTAMP,
 )
 from sqlalchemy.dialects.postgresql import ExcludeConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.audit import audited
 from app.core.database import Base
-from app.model.base import TimestampMixin
+from app.model.base import AuditMetadataMixin
 
 
 class OrgMemberStatus(StrEnum):
@@ -22,7 +24,7 @@ class OrgMemberStatus(StrEnum):
     INACTIVE = "INACTIVE"
 
 
-class OrganizationMemberAud(Base, TimestampMixin):
+class OrganizationMemberAud(Base):
     """Audit table for identity.organization_member."""
     __tablename__ = "organization_member_aud"
     __table_args__ = (
@@ -39,9 +41,14 @@ class OrganizationMemberAud(Base, TimestampMixin):
     role_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     status: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
+    created_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    created_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    updated_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
+    updated_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+
 
 @audited(OrganizationMemberAud)
-class OrganizationMember(Base, TimestampMixin):
+class OrganizationMember(Base, AuditMetadataMixin):
     """Organization membership and role assignment entity."""
     __tablename__ = "organization_member"
     __table_args__ = (

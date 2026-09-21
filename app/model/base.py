@@ -4,7 +4,7 @@ from sqlalchemy import TIMESTAMP, BigInteger, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 
-class TimestampMixin:
+class AuditMetadataMixin:
     """Reusable mixin for audit tracking columns."""
     created_at: Mapped[datetime | None] = mapped_column(
         TIMESTAMP(timezone=True),
