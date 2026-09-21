@@ -28,7 +28,7 @@ This directory contains the database schema migration scripts and configuration 
 
 ### Step 1: Create a New Blank Revision Script
 
-Run the following CLI command to generate a new timestamped migration file under `alembic/versions/`:
+Run the following CLI command from the project root to generate a new timestamped migration file under `alembic/versions/`:
 
     alembic revision -m "describe your migration here"
 
