@@ -1,12 +1,33 @@
 from collections.abc import Sequence
+from dataclasses import dataclass, field
+from enum import StrEnum
 from typing import Generic, TypeVar
 
-from sqlalchemy import func, select
+from sqlalchemy import ColumnElement, func, select
 from sqlalchemy.orm import Session
 
 from app.core.database import Base
 
 ModelType = TypeVar("ModelType", bound=Base)
+
+
+class SortOrder(StrEnum):
+    ASC = "asc"
+    DESC = "desc"
+
+
+@dataclass(frozen=True)
+class Pageable:
+    """Encapsulates pagination and sort parameters for repository queries."""
+    page: int = 0
+    page_size: int = 20
+    sort_by: ColumnElement | None = field(default=None, compare=False)
+    sort_order: SortOrder = SortOrder.ASC
+
+    @property
+    def offset(self) -> int:
+        """Calculated row offset for SQL OFFSET clause."""
+        return self.page * self.page_size
 
 
 class BaseRepository(Generic[ModelType]):
@@ -20,9 +41,13 @@ class BaseRepository(Generic[ModelType]):
         """Fetch a single record by its primary key ID."""
         return self.session.get(self.model, id)
 
-    def find_all(self, skip: int = 0, limit: int = 100) -> list[ModelType]:
-        """Fetch records with pagination support."""
-        stmt = select(self.model).offset(skip).limit(limit)
+    def find_all(self, pageable: Pageable | None = None) -> list[ModelType]:
+        """Fetch records, optionally scoped by a Pageable page window with ordering."""
+        stmt = select(self.model)
+        if pageable is not None:
+            col = pageable.sort_by if pageable.sort_by is not None else self.model.id
+            order_expr = col.asc() if pageable.sort_order == SortOrder.ASC else col.desc()
+            stmt = stmt.order_by(order_expr).offset(pageable.offset).limit(pageable.page_size)
         return list(self.session.scalars(stmt).all())
 
     def find_all_by_ids(self, ids: Sequence[int]) -> list[ModelType]:

@@ -31,17 +31,7 @@ class OrganizationMemberRepository(BaseRepository[OrganizationMember]):
         )
         return list(self.session.scalars(stmt).all())
 
-    def find_all_by_org(
-        self,
-        org_id: int,
-        skip: int = 0,
-        limit: int = 100,
-    ) -> list[OrganizationMember]:
+    def find_all_by_org(self, org_id: int) -> list[OrganizationMember]:
         """Fetch all member records for an organization."""
-        stmt = (
-            select(OrganizationMember)
-            .where(OrganizationMember.org_id == org_id)
-            .offset(skip)
-            .limit(limit)
-        )
+        stmt = select(OrganizationMember).where(OrganizationMember.org_id == org_id)
         return list(self.session.scalars(stmt).all())

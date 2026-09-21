@@ -26,16 +26,9 @@ class AppUserRepository(BaseRepository[AppUser]):
     def find_all_by_status_in(
         self,
         statuses: Sequence[AppUserStatus],
-        skip: int = 0,
-        limit: int = 100,
     ) -> list[AppUser]:
         """Fetch users whose status is within the specified collection."""
         if not statuses:
             return []
-        stmt = (
-            select(AppUser)
-            .where(AppUser.status.in_(statuses))
-            .offset(skip)
-            .limit(limit)
-        )
+        stmt = select(AppUser).where(AppUser.status.in_(statuses))
         return list(self.session.scalars(stmt).all())

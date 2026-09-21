@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 from sqlalchemy.orm import Session
 
 from app.model.identity import AppUser, AppUserStatus
-from app.repository.base import BaseRepository
+from app.repository.base import BaseRepository, Pageable, SortOrder
 
 
 def test_base_repository_crud():
@@ -55,10 +55,20 @@ def test_base_repository_crud():
     mock_session.get.assert_called_once_with(AppUser, 1)
     assert found == user
 
-    # 6. Find all
+    # 6a. Find all (unbounded)
     mock_session.scalars.return_value.all.return_value = [user]
-    all_users = repo.find_all(skip=0, limit=10)
+    all_users = repo.find_all()
     assert all_users == [user]
+
+    # 6b. Pageable with default sort (id ASC)
+    mock_session.scalars.return_value.all.return_value = [user]
+    paged_users = repo.find_all(Pageable(page=0, page_size=10))
+    assert paged_users == [user]
+
+    # 6c. Pageable with explicit column sort (AppUser.email DESC)
+    mock_session.scalars.return_value.all.return_value = [user]
+    paged_sorted = repo.find_all(Pageable(page=0, page_size=10, sort_by=AppUser.email, sort_order=SortOrder.DESC))
+    assert paged_sorted == [user]
 
     # 7. Count
     mock_session.scalar.return_value = 42

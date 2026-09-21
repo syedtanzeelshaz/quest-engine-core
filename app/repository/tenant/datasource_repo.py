@@ -15,19 +15,9 @@ class DatasourceRepository(BaseRepository[Datasource]):
     def __init__(self, session: Session) -> None:
         super().__init__(Datasource, session)
 
-    def find_all_by_org(
-        self,
-        org_id: int,
-        skip: int = 0,
-        limit: int = 100,
-    ) -> list[Datasource]:
-        """Fetch all datasources belonging to an organization with pagination."""
-        stmt = (
-            select(Datasource)
-            .where(Datasource.org_id == org_id)
-            .offset(skip)
-            .limit(limit)
-        )
+    def find_all_by_org(self, org_id: int) -> list[Datasource]:
+        """Fetch all datasources belonging to an organization."""
+        stmt = select(Datasource).where(Datasource.org_id == org_id)
         return list(self.session.scalars(stmt).all())
 
     def count_by_org(self, org_id: int) -> int:
@@ -57,12 +47,7 @@ class DatasourceRepository(BaseRepository[Datasource]):
         )
         return self.session.scalar(stmt) is not None
 
-    def find_all_active_by_org(
-        self,
-        org_id: int,
-        skip: int = 0,
-        limit: int = 100,
-    ) -> list[Datasource]:
+    def find_all_active_by_org(self, org_id: int) -> list[Datasource]:
         """Fetch all operational and approved datasources for an organization."""
         stmt = (
             select(Datasource)
@@ -71,8 +56,6 @@ class DatasourceRepository(BaseRepository[Datasource]):
                 Datasource.status == DatasourceStatus.ACTIVE,
                 Datasource.approval_status == DatasourceApprovalStatus.APPROVED,
             )
-            .offset(skip)
-            .limit(limit)
         )
         return list(self.session.scalars(stmt).all())
 
@@ -80,8 +63,6 @@ class DatasourceRepository(BaseRepository[Datasource]):
         self,
         org_id: int,
         approval_status: DatasourceApprovalStatus,
-        skip: int = 0,
-        limit: int = 100,
     ) -> list[Datasource]:
         """Fetch datasources by approval status within an organization."""
         stmt = (
@@ -90,8 +71,6 @@ class DatasourceRepository(BaseRepository[Datasource]):
                 Datasource.org_id == org_id,
                 Datasource.approval_status == approval_status,
             )
-            .offset(skip)
-            .limit(limit)
         )
         return list(self.session.scalars(stmt).all())
 
@@ -99,8 +78,6 @@ class DatasourceRepository(BaseRepository[Datasource]):
         self,
         org_id: int,
         status: DatasourceStatus,
-        skip: int = 0,
-        limit: int = 100,
     ) -> list[Datasource]:
         """Fetch datasources by operational status within an organization."""
         stmt = (
@@ -109,7 +86,5 @@ class DatasourceRepository(BaseRepository[Datasource]):
                 Datasource.org_id == org_id,
                 Datasource.status == status,
             )
-            .offset(skip)
-            .limit(limit)
         )
         return list(self.session.scalars(stmt).all())

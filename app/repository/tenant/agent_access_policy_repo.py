@@ -11,17 +11,7 @@ class AgentAccessPolicyRepository(BaseRepository[AgentAccessPolicy]):
     def __init__(self, session: Session) -> None:
         super().__init__(AgentAccessPolicy, session)
 
-    def find_all_by_agent(
-        self,
-        agent_id: int,
-        skip: int = 0,
-        limit: int = 100,
-    ) -> list[AgentAccessPolicy]:
+    def find_all_by_agent(self, agent_id: int) -> list[AgentAccessPolicy]:
         """Fetch all access policies defined for an agent."""
-        stmt = (
-            select(AgentAccessPolicy)
-            .where(AgentAccessPolicy.agent_id == agent_id)
-            .offset(skip)
-            .limit(limit)
-        )
+        stmt = select(AgentAccessPolicy).where(AgentAccessPolicy.agent_id == agent_id)
         return list(self.session.scalars(stmt).all())

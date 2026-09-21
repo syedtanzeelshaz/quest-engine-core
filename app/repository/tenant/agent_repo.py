@@ -11,14 +11,9 @@ class AgentRepository(BaseRepository[Agent]):
     def __init__(self, session: Session) -> None:
         super().__init__(Agent, session)
 
-    def find_all_by_org(
-        self,
-        org_id: int,
-        skip: int = 0,
-        limit: int = 100,
-    ) -> list[Agent]:
-        """Fetch all agents belonging to an organization with pagination."""
-        stmt = select(Agent).where(Agent.org_id == org_id).offset(skip).limit(limit)
+    def find_all_by_org(self, org_id: int) -> list[Agent]:
+        """Fetch all agents belonging to an organization."""
+        stmt = select(Agent).where(Agent.org_id == org_id)
         return list(self.session.scalars(stmt).all())
 
     def count_by_org(self, org_id: int) -> int:
@@ -44,12 +39,7 @@ class AgentRepository(BaseRepository[Agent]):
         )
         return self.session.scalar(stmt) is not None
 
-    def find_all_active_by_org(
-        self,
-        org_id: int,
-        skip: int = 0,
-        limit: int = 100,
-    ) -> list[Agent]:
+    def find_all_active_by_org(self, org_id: int) -> list[Agent]:
         """Fetch all active agents for an organization."""
         stmt = (
             select(Agent)
@@ -57,7 +47,5 @@ class AgentRepository(BaseRepository[Agent]):
                 Agent.org_id == org_id,
                 Agent.status == AgentStatus.ACTIVE,
             )
-            .offset(skip)
-            .limit(limit)
         )
         return list(self.session.scalars(stmt).all())

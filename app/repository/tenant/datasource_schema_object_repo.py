@@ -11,18 +11,10 @@ class DatasourceSchemaObjectRepository(BaseRepository[DatasourceSchemaObject]):
     def __init__(self, session: Session) -> None:
         super().__init__(DatasourceSchemaObject, session)
 
-    def find_all_by_datasource(
-        self,
-        datasource_id: int,
-        skip: int = 0,
-        limit: int = 100,
-    ) -> list[DatasourceSchemaObject]:
+    def find_all_by_datasource(self, datasource_id: int) -> list[DatasourceSchemaObject]:
         """Fetch all discovered schema objects for a datasource."""
-        stmt = (
-            select(DatasourceSchemaObject)
-            .where(DatasourceSchemaObject.datasource_id == datasource_id)
-            .offset(skip)
-            .limit(limit)
+        stmt = select(DatasourceSchemaObject).where(
+            DatasourceSchemaObject.datasource_id == datasource_id
         )
         return list(self.session.scalars(stmt).all())
 

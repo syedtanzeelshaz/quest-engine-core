@@ -31,16 +31,9 @@ class OrganizationRepository(BaseRepository[Organization]):
     def find_all_by_status_in(
         self,
         statuses: Sequence[OrgStatus],
-        skip: int = 0,
-        limit: int = 100,
     ) -> list[Organization]:
         """Fetch organizations matching a sequence of statuses."""
         if not statuses:
             return []
-        stmt = (
-            select(Organization)
-            .where(Organization.status.in_(statuses))
-            .offset(skip)
-            .limit(limit)
-        )
+        stmt = select(Organization).where(Organization.status.in_(statuses))
         return list(self.session.scalars(stmt).all())
