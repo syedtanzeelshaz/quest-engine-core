@@ -1,9 +1,11 @@
 from sqlalchemy import BigInteger, Identity
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.core.audit import register_revinfo
 from app.core.database import Base
 
 
+@register_revinfo("tenant")
 class TenantRevInfo(Base):
     """Tenant audit revision metadata table."""
     __tablename__ = "revinfo"

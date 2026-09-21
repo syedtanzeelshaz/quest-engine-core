@@ -42,6 +42,10 @@ def get_db() -> Generator[Session, None, None]:
     token = set_current_session(db)
     try:
         yield db
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     finally:
         reset_current_session(token)
         db.close()

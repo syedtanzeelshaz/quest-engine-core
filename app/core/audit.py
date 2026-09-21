@@ -19,6 +19,9 @@ class RevType(IntEnum):
 # Maps Base entity class -> Audited entity class
 AUDIT_REGISTRY: dict[type, type] = {}
 
+# Maps schema name -> RevInfo class
+REVINFO_REGISTRY: dict[str, type] = {}
+
 
 def audited(aud_model_cls: type) -> Callable[[type], type]:
     """
@@ -36,16 +39,29 @@ def audited(aud_model_cls: type) -> Callable[[type], type]:
     return decorator
 
 
+def register_revinfo(schema: str) -> Callable[[type], type]:
+    """
+    Class decorator to register a RevInfo model for a given schema name.
+
+    Example:
+        @register_revinfo("identity")
+        class IdentityRevInfo(Base):
+            ...
+    """
+    def decorator(cls: type) -> type:
+        REVINFO_REGISTRY[schema] = cls
+        return cls
+
+    return decorator
+
+
 def _get_revinfo_model(schema: str) -> type:
-    """Dynamically resolve the RevInfo model corresponding to the schema."""
-    if schema == "identity":
-        from app.model.identity.revinfo import IdentityRevInfo
-        return IdentityRevInfo
-    elif schema == "tenant":
-        from app.model.tenant.revinfo import TenantRevInfo
-        return TenantRevInfo
-    else:
-        raise ValueError(f"Unsupported schema for audit revision: {schema}")
+    """Resolve the RevInfo model for the given schema from the registry."""
+    try:
+        return REVINFO_REGISTRY[schema]
+    except KeyError:
+        raise ValueError(f"Unsupported schema for audit revision: '{schema}'. "
+                         f"Did you forget to decorate the RevInfo class with @register_revinfo?")
 
 
 def audit_before_flush(session: Session, flush_context: Any, instances: Any) -> None:

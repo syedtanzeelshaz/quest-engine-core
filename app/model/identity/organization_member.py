@@ -87,6 +87,6 @@ class OrganizationMember(Base, AuditMetadataMixin):
     )
 
     # Relationships
-    user = relationship("AppUser", lazy="joined")
-    organization = relationship("Organization", lazy="joined")
-    role = relationship("Role", lazy="joined")
+    user = relationship("AppUser", lazy="select")
+    organization = relationship("Organization", lazy="select")
+    role = relationship("Role", lazy="select")

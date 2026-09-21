@@ -41,11 +41,8 @@ def _resolve_session(*args: Any, **kwargs: Any) -> tuple[Session | None, bool]:
             return candidate, False
 
         # Injected repositories on self (e.g. self.user_repo.session)
-        for attr_name in dir(self_obj):
-            if attr_name.startswith("_"):
-                continue
+        for attr_val in vars(self_obj).values():
             try:
-                attr_val = getattr(self_obj, attr_name)
                 repo_session = getattr(attr_val, "session", None)
                 if repo_session is not None and isinstance(repo_session, Session):
                     return repo_session, False

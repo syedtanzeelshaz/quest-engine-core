@@ -1,7 +1,8 @@
 from datetime import datetime
 
-from sqlalchemy import TIMESTAMP, BigInteger, func
+from sqlalchemy import TIMESTAMP, BigInteger
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.sql import text
 
 
 class AuditMetadataMixin:
@@ -9,7 +10,7 @@ class AuditMetadataMixin:
     created_at: Mapped[datetime | None] = mapped_column(
         TIMESTAMP(timezone=True),
         nullable=True,
-        default=func.now(),
+        server_default=text("now()"),
     )
     created_by: Mapped[int | None] = mapped_column(
         BigInteger,
@@ -18,8 +19,7 @@ class AuditMetadataMixin:
     updated_at: Mapped[datetime | None] = mapped_column(
         TIMESTAMP(timezone=True),
         nullable=True,
-        default=func.now(),
-        onupdate=func.now(),
+        server_default=text("now()"),
     )
     updated_by: Mapped[int | None] = mapped_column(
         BigInteger,
