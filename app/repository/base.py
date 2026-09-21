@@ -32,24 +32,42 @@ class BaseRepository(Generic[ModelType]):
         stmt = select(self.model).where(self.model.id.in_(ids))
         return list(self.session.scalars(stmt).all())
 
-    def create(self, obj: ModelType) -> ModelType:
-        """Add and flush a new record."""
-        self.session.add(obj)
-        self.session.flush()
-        return obj
+    def _prefetch_existing(self, objs: Sequence[ModelType]) -> None:
+        """Batch-load existing records into the identity map in a single query to eliminate N+1 SELECTs."""
+        ids = [
+            getattr(obj, "id")
+            for obj in objs
+            if getattr(obj, "id", None) is not None
+        ]
+        if ids:
+            stmt = select(self.model).where(self.model.id.in_(ids))
+            self.session.scalars(stmt).all()
 
-    def create_all(self, objs: Sequence[ModelType]) -> list[ModelType]:
-        """Add and flush multiple new records."""
+    def save(self, obj: ModelType) -> ModelType:
+        """Stage an entity for insert or update without an immediate flush."""
+        return self.session.merge(obj)
+
+    def save_all(self, objs: Sequence[ModelType]) -> list[ModelType]:
+        """Stage multiple entities for insert or update without an immediate flush."""
         if not objs:
             return []
-        self.session.add_all(objs)
-        self.session.flush()
-        return list(objs)
+        self._prefetch_existing(objs)
+        return [self.session.merge(obj) for obj in objs]
 
-    def update(self, obj: ModelType) -> ModelType:
-        """Flush modifications on an existing tracked record."""
+    def save_and_flush(self, obj: ModelType) -> ModelType:
+        """Stage an entity for insert or update and immediately flush changes."""
+        merged_obj = self.session.merge(obj)
         self.session.flush()
-        return obj
+        return merged_obj
+
+    def save_all_and_flush(self, objs: Sequence[ModelType]) -> list[ModelType]:
+        """Stage multiple entities for insert or update and immediately flush changes."""
+        if not objs:
+            return []
+        self._prefetch_existing(objs)
+        merged_objs = [self.session.merge(obj) for obj in objs]
+        self.session.flush()
+        return merged_objs
 
     def delete(self, obj: ModelType) -> None:
         """Delete a tracked record."""
