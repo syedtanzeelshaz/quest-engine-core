@@ -1,0 +1,126 @@
+"""
+TokenRefreshService — refresh token exchange and revocation (logout).
+
+Handles the full lifecycle of persisted refresh tokens:
+  - refresh(): exchange a valid refresh token for a new token pair (with rotation)
+  - revoke(): invalidate a refresh token (logout)
+"""
+from datetime import datetime, timezone
+
+from app.core.exceptions import InvalidRefreshTokenError
+from app.core.transaction import transactional
+from app.model.identity.refresh_token import RefreshToken
+from app.repository.identity.app_user_repo import AppUserRepository
+from app.repository.identity.refresh_token_repo import RefreshTokenRepository
+from app.service.authentication.models import AuthTokenPair
+from app.service.authentication.token import TokenService
+
+
+class TokenRefreshService:
+    """Handles refresh token exchange (with rotation) and revocation (logout)."""
+
+    def __init__(
+        self,
+        user_repo: AppUserRepository,
+        refresh_token_repo: RefreshTokenRepository,
+        token_service: TokenService,
+    ) -> None:
+        self._user_repo = user_repo
+        self._refresh_token_repo = refresh_token_repo
+        self._token_service = token_service
+
+    @transactional
+    def refresh(self, raw_refresh_token: str) -> AuthTokenPair:
+        """
+        Exchange a valid refresh token for a new access + refresh token pair.
+
+        Implements refresh token rotation: the provided token is revoked
+        immediately after use and a new one is issued and persisted.
+
+        Steps:
+            1. Verify JWT signature and type of the refresh token.
+            2. Look up the token hash in DB (must exist, not revoked, not expired).
+            3. Revoke the old refresh token record (rotation).
+            4. Issue a new token pair.
+            5. Persist the new refresh token hash.
+
+        Returns:
+            New AuthTokenPair.
+
+        Raises:
+            InvalidRefreshTokenError: for any invalid/expired/revoked token.
+        """
+        # 1. Verify JWT signature and type claim
+        user_id = self._token_service.verify_refresh_token(raw_refresh_token)
+
+        # 2. Look up the token hash in DB
+        token_hash = self._token_service.hash_token(raw_refresh_token)
+        stored_token = self._refresh_token_repo.find_by_token_hash(token_hash)
+        if stored_token is None:
+            raise InvalidRefreshTokenError(
+                "Refresh token not found, already used, or expired."
+            )
+
+        # 3. Revoke old token (rotation)
+        self._revoke_token_record(stored_token)
+
+        # 4. Issue new pair
+        new_token_pair = self._token_service.issue_pair(user_id)
+
+        # 5. Persist new refresh token
+        self._persist_refresh_token(user_id, new_token_pair.refresh_token)
+
+        return new_token_pair
+
+    @transactional
+    def revoke(self, raw_refresh_token: str, requesting_user_id: int) -> None:
+        """
+        Revoke a refresh token (logout).
+
+        This operation is idempotent: if the token is not found or is already
+        revoked, it silently succeeds rather than raising an error.
+
+        Steps:
+            1. Hash the raw token and look it up in DB.
+            2. Verify ownership — token must belong to requesting_user_id.
+            3. Mark as revoked.
+
+        Raises:
+            InvalidRefreshTokenError: if the token belongs to a different user.
+        """
+        token_hash = self._token_service.hash_token(raw_refresh_token)
+
+        # Look up without active-only filter so we can detect ownership mismatch
+        # even on already-revoked tokens
+        stored_token = self._refresh_token_repo.find_by_token_hash_any(token_hash)
+        if stored_token is None:
+            # Token not found or already expired — treat as idempotent success
+            return
+
+        if stored_token.user_id != requesting_user_id:
+            raise InvalidRefreshTokenError(
+                "Refresh token does not belong to the current user."
+            )
+
+        if not stored_token.is_revoked:
+            self._revoke_token_record(stored_token)
+
+    # ------------------------------------------------------------------
+    # Internals
+    # ------------------------------------------------------------------
+
+    def _revoke_token_record(self, token: RefreshToken) -> None:
+        token.is_revoked = True
+        token.revoked_at = datetime.now(timezone.utc)
+        self._refresh_token_repo.save_and_flush(token)
+
+    def _persist_refresh_token(self, user_id: int, raw_refresh_token: str) -> None:
+        token_hash = self._token_service.hash_token(raw_refresh_token)
+        expires_at = self._token_service.refresh_token_expires_at()
+        refresh_token = RefreshToken(
+            user_id=user_id,
+            token_hash=token_hash,
+            expires_at=expires_at,
+            is_revoked=False,
+        )
+        self._refresh_token_repo.save_and_flush(refresh_token)

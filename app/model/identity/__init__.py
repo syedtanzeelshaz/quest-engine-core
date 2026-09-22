@@ -11,6 +11,7 @@ from app.model.identity.organization_member import (
     OrganizationMemberAud,
     OrgMemberStatus,
 )
+from app.model.identity.refresh_token import RefreshToken
 from app.model.identity.revinfo import IdentityRevInfo
 from app.model.identity.role import Role, RoleAud
 
@@ -20,6 +21,7 @@ __all__ = [
     "AppUserStatus",
     "IdentityRevInfo",
     "JoinRequest",
+    "RefreshToken",
     "JoinRequestAud",
     "JoinRequestStatus",
     "JoinRequestType",

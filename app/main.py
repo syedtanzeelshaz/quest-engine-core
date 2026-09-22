@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
-from app.api.routes import auth, health
+from app.api.rest.routes import auth, health
 from app.core.bootstrap import run_startup_checks
 from app.core.database import engine
 from app.util.logger import log
@@ -42,8 +42,8 @@ def create_app() -> FastAPI:
     # Infrastructure route (Unversioned for load balancers / k8s probes) -> GET /health
     app.include_router(health.router, prefix="/health")
 
-    # routes
-    app.include_router(auth.router, prefix="/api/v1/auth")
+    # REST API routes
+    app.include_router(auth.router, prefix="/api/v1")
 
     return app
 

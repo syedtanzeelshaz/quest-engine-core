@@ -13,6 +13,7 @@ from app.model.identity import (
     OrganizationMemberAud,
     OrgMemberStatus,
     OrgStatus,
+    RefreshToken,
     Role,
     RoleAud,
 )
@@ -58,6 +59,7 @@ __all__ = [
     "JoinRequestType",
     "OrgMemberStatus",
     "OrgStatus",
+    "RefreshToken",
     # Tenant Models
     "Agent",
     "AgentAccessPolicy",
