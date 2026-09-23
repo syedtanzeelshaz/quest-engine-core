@@ -36,7 +36,7 @@ def get_current_user(
 
     if user is None or user.status != AppUserStatus.ACTIVE:
         raise HTTPException(
-            status_code=HttpCode.UNAUTHORIZED,
+            status_code=HttpCode._401,
             detail=HttpMessage.AUTHENTICATION_REQUIRED,
         )
     return user

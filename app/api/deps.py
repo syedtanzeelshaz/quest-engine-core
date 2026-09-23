@@ -22,4 +22,4 @@ def get_user_id_from_token(raw_token: str) -> int:
     try:
         return _token_service.verify_access_token(raw_token)
     except InvalidRefreshTokenError:
-        raise HTTPException(status_code=HttpCode.UNAUTHORIZED, detail=HttpMessage.INVALID_TOKEN)
+        raise HTTPException(status_code=HttpCode._401, detail=HttpMessage.INVALID_TOKEN)

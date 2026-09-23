@@ -46,7 +46,7 @@ def _make_token_response(token_pair) -> TokenResponse:
     )
 
 
-@router.post("/register", response_model=RegisterResponse, status_code=HttpCode.CREATED)
+@router.post("/register", response_model=RegisterResponse, status_code=HttpCode._201)
 def register(body: RegisterRequest, db: Session = Depends(get_db)) -> RegisterResponse:
     """Register a new user account and return JWT tokens."""
     log.info("Received registration request for email: %s", body.email)
@@ -68,7 +68,7 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)) -> RegisterRe
         )
     except EmailAlreadyExistsError:
         raise HTTPException(
-            status_code=HttpCode.CONFLICT,
+            status_code=HttpCode._409,
             detail=HttpMessage.EMAIL_ALREADY_REGISTERED,
         )
 
@@ -81,7 +81,7 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)) -> RegisterRe
     )
 
 
-@router.post("/login", response_model=TokenResponse, status_code=HttpCode.OK)
+@router.post("/login", response_model=TokenResponse, status_code=HttpCode._200)
 def login(body: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
     """Authenticate user credentials and return JWT tokens."""
     log.info("Received login request for email: %s", body.email)
@@ -99,19 +99,19 @@ def login(body: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
         )
     except InvalidCredentialsError:
         raise HTTPException(
-            status_code=HttpCode.UNAUTHORIZED,
+            status_code=HttpCode._401,
             detail=HttpMessage.INVALID_CREDENTIALS,
         )
     except UserNotActiveError:
         raise HTTPException(
-            status_code=HttpCode.FORBIDDEN,
+            status_code=HttpCode._403,
             detail=HttpMessage.ACCOUNT_NOT_ACTIVE,
         )
 
     return _make_token_response(token_pair)
 
 
-@router.post("/refresh", response_model=TokenResponse, status_code=HttpCode.OK)
+@router.post("/refresh", response_model=TokenResponse, status_code=HttpCode._200)
 def refresh_token(body: RefreshRequest, db: Session = Depends(get_db)) -> TokenResponse:
     """Exchange a valid refresh token for a new access + refresh token pair."""
     log.info("Received token refresh request.")
@@ -126,14 +126,14 @@ def refresh_token(body: RefreshRequest, db: Session = Depends(get_db)) -> TokenR
         token_pair = service.refresh(body.refresh_token)
     except InvalidRefreshTokenError:
         raise HTTPException(
-            status_code=HttpCode.UNAUTHORIZED,
+            status_code=HttpCode._401,
             detail=HttpMessage.INVALID_REFRESH_TOKEN,
         )
 
     return _make_token_response(token_pair)
 
 
-@router.post("/logout", status_code=HttpCode.OK)
+@router.post("/logout", status_code=HttpCode._200)
 def logout(
     body: LogoutRequest,
     db: Session = Depends(get_db),
@@ -155,7 +155,7 @@ def logout(
         service.revoke(body.refresh_token, requesting_user_id=current_user.id)
     except InvalidRefreshTokenError:
         raise HTTPException(
-            status_code=HttpCode.UNAUTHORIZED,
+            status_code=HttpCode._401,
             detail=HttpMessage.INVALID_REFRESH_TOKEN,
         )
 
