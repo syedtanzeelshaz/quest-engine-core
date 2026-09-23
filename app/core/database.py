@@ -13,7 +13,7 @@ class Base(DeclarativeBase):
 
 
 engine = create_engine(settings.DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, expire_on_commit=False, bind=engine)
 
 # Register audit event listeners across all sessions
 register_audit_listeners()

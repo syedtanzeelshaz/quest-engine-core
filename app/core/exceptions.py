@@ -23,5 +23,9 @@ class UserNotActiveError(Exception):
     """Raised when the user account exists but is not in ACTIVE status."""
 
 
-class InvalidRefreshTokenError(Exception):
+class InvalidTokenError(Exception):
+    """Raised when a JWT access token is invalid, malformed, or expired."""
+
+
+class InvalidRefreshTokenError(InvalidTokenError):
     """Raised when a refresh token is invalid, expired, or already revoked."""

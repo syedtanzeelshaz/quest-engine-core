@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 
 from app.core.config import Settings
-from app.core.exceptions import InvalidRefreshTokenError
+from app.core.exceptions import InvalidRefreshTokenError, InvalidTokenError
 from app.service.authentication.models import AuthTokenPair
 
 _ACCESS_TOKEN_TYPE = "access"
@@ -94,7 +94,7 @@ class TokenService:
         """
         Decode and validate a JWT access token.
         Returns the user_id if valid.
-        Raises InvalidRefreshTokenError on any failure.
+        Raises InvalidTokenError on any failure.
         """
         return self._decode_and_validate(token, expected_type=_ACCESS_TOKEN_TYPE)
 
@@ -111,7 +111,7 @@ class TokenService:
         try:
             return jwt.decode(token, self._secret, algorithms=[self._algorithm])
         except JWTError:
-            raise InvalidRefreshTokenError("Token is invalid or expired.")
+            raise InvalidTokenError("Token is invalid or expired.")
 
     def refresh_token_expires_at(self) -> datetime:
         """Return the absolute expiry datetime for a newly issued refresh token."""
@@ -127,14 +127,15 @@ class TokenService:
     # ------------------------------------------------------------------
 
     def _decode_and_validate(self, token: str, expected_type: str) -> int:
+        err_cls = InvalidRefreshTokenError if expected_type == _REFRESH_TOKEN_TYPE else InvalidTokenError
         try:
             payload = jwt.decode(token, self._secret, algorithms=[self._algorithm])
         except JWTError:
-            raise InvalidRefreshTokenError("Token is invalid or expired.")
+            raise err_cls("Token is invalid or expired.")
 
         token_type = payload.get("type")
         if token_type != expected_type:
-            raise InvalidRefreshTokenError(
+            raise err_cls(
                 f"Expected token type '{expected_type}', got '{token_type}'."
             )
 
@@ -153,10 +154,10 @@ class TokenService:
                     pass
 
         if user_id is None:
-            raise InvalidRefreshTokenError("Token user identifier is missing.")
+            raise err_cls("Token user identifier is missing.")
 
         try:
             return int(user_id)
         except (ValueError, TypeError):
-            raise InvalidRefreshTokenError("Token user identifier is not a valid integer.")
+            raise err_cls("Token user identifier is not a valid integer.")
 

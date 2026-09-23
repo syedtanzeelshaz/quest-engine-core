@@ -1,7 +1,15 @@
 from datetime import datetime
 
-from sqlalchemy import BigInteger, Boolean, Identity, Index, String, TIMESTAMP
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    ForeignKey,
+    Identity,
+    Index,
+    String,
+    TIMESTAMP,
+)
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
 from app.model.base import AuditMetadataMixin
@@ -23,6 +31,7 @@ class RefreshToken(Base, AuditMetadataMixin):
     )
     user_id: Mapped[int] = mapped_column(
         BigInteger,
+        ForeignKey("identity.app_user.id", ondelete="CASCADE"),
         nullable=False,
     )
     token_hash: Mapped[str] = mapped_column(
@@ -43,3 +52,6 @@ class RefreshToken(Base, AuditMetadataMixin):
         TIMESTAMP(timezone=True),
         nullable=True,
     )
+
+    # Relationships
+    user = relationship("AppUser", lazy="select")

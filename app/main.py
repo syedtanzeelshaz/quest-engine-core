@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+import app.model  # noqa: F401 - Pre-load all models, audit listeners, and revinfo metadata
 from app import __version__
 from app.api.rest.routes import auth, health
 from app.core.bootstrap import run_startup_checks
