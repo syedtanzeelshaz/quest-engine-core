@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import BigInteger, Boolean, Identity, String, TIMESTAMP
+from sqlalchemy import BigInteger, Boolean, Identity, Index, String, TIMESTAMP
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -11,7 +11,10 @@ class RefreshToken(Base, AuditMetadataMixin):
     """Persisted refresh token record for server-side revocation support."""
 
     __tablename__ = "refresh_token"
-    __table_args__ = {"schema": "identity"}
+    __table_args__ = (
+        Index("idx_refresh_token_user_id", "user_id"),
+        {"schema": "identity"},
+    )
 
     id: Mapped[int] = mapped_column(
         BigInteger,

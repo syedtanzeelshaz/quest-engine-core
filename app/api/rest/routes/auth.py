@@ -14,6 +14,7 @@ from app.core.exceptions import (
 )
 from app.model.identity.app_user import AppUser
 from app.repository.identity.app_user_repo import AppUserRepository
+from app.repository.identity.organization_member_repo import OrganizationMemberRepository
 from app.repository.identity.refresh_token_repo import RefreshTokenRepository
 from app.schema.authentication.auth import (
     LogoutRequest,
@@ -90,6 +91,7 @@ def login(body: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
         refresh_token_repo=RefreshTokenRepository(db),
         password_service=_password_service,
         token_service=_token_service,
+        org_member_repo=OrganizationMemberRepository(db),
     )
     try:
         _, token_pair = service.authenticate(
@@ -118,6 +120,7 @@ def refresh_token(body: RefreshRequest, db: Session = Depends(get_db)) -> TokenR
         user_repo=AppUserRepository(db),
         refresh_token_repo=RefreshTokenRepository(db),
         token_service=_token_service,
+        org_member_repo=OrganizationMemberRepository(db),
     )
     try:
         token_pair = service.refresh(body.refresh_token)
@@ -146,6 +149,7 @@ def logout(
         user_repo=AppUserRepository(db),
         refresh_token_repo=RefreshTokenRepository(db),
         token_service=_token_service,
+        org_member_repo=OrganizationMemberRepository(db),
     )
     try:
         service.revoke(body.refresh_token, requesting_user_id=current_user.id)

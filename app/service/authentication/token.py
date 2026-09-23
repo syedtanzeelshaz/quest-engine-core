@@ -31,27 +31,59 @@ class TokenService:
     # Public API
     # ------------------------------------------------------------------
 
-    def issue_pair(self, user_id: int) -> AuthTokenPair:
+    def issue_pair(
+        self,
+        user_id: int,
+        email: str,
+        first_name: str | None = None,
+        last_name: str | None = None,
+        roles: list[str] | None = None,
+    ) -> AuthTokenPair:
         """
-        Issue a signed access + refresh JWT pair for the given user ID.
+        Issue a signed access + refresh JWT pair for the given user.
         Does NOT store anything in the database.
+
+        Payload structure:
+            Access token:
+                sub: email
+                details: { id: user_id, firstName, lastName }
+                roles: list[str] or null (if no organization memberships)
+                type: "access"
+                iat, exp
+            Refresh token:
+                sub: email
+                user_id: user_id
+                type: "refresh"
+                iat, exp
         """
         now = datetime.now(timezone.utc)
         access_expire = timedelta(minutes=self._access_expire_minutes)
         refresh_expire = timedelta(days=self._refresh_expire_days)
 
-        access_token = self._encode(
-            user_id=user_id,
-            token_type=_ACCESS_TOKEN_TYPE,
-            expires_delta=access_expire,
-            now=now,
-        )
-        refresh_token = self._encode(
-            user_id=user_id,
-            token_type=_REFRESH_TOKEN_TYPE,
-            expires_delta=refresh_expire,
-            now=now,
-        )
+        access_payload = {
+            "sub": email,
+            "details": {
+                "id": user_id,
+                "firstName": first_name or "",
+                "lastName": last_name or "",
+            },
+            "roles": roles,
+            "type": _ACCESS_TOKEN_TYPE,
+            "iat": now,
+            "exp": now + access_expire,
+        }
+
+        refresh_payload = {
+            "sub": email,
+            "user_id": user_id,
+            "type": _REFRESH_TOKEN_TYPE,
+            "iat": now,
+            "exp": now + refresh_expire,
+        }
+
+        access_token = jwt.encode(access_payload, self._secret, algorithm=self._algorithm)
+        refresh_token = jwt.encode(refresh_payload, self._secret, algorithm=self._algorithm)
+
         return AuthTokenPair(
             access_token=access_token,
             refresh_token=refresh_token,
@@ -61,7 +93,7 @@ class TokenService:
     def verify_access_token(self, token: str) -> int:
         """
         Decode and validate a JWT access token.
-        Returns the user_id (subject) if valid.
+        Returns the user_id if valid.
         Raises InvalidRefreshTokenError on any failure.
         """
         return self._decode_and_validate(token, expected_type=_ACCESS_TOKEN_TYPE)
@@ -69,10 +101,17 @@ class TokenService:
     def verify_refresh_token(self, token: str) -> int:
         """
         Decode and validate a JWT refresh token.
-        Returns the user_id (subject) if valid.
+        Returns the user_id if valid.
         Raises InvalidRefreshTokenError on any failure.
         """
         return self._decode_and_validate(token, expected_type=_REFRESH_TOKEN_TYPE)
+
+    def decode_token(self, token: str) -> dict:
+        """Decode and return the full raw JWT payload."""
+        try:
+            return jwt.decode(token, self._secret, algorithms=[self._algorithm])
+        except JWTError:
+            raise InvalidRefreshTokenError("Token is invalid or expired.")
 
     def refresh_token_expires_at(self) -> datetime:
         """Return the absolute expiry datetime for a newly issued refresh token."""
@@ -87,21 +126,6 @@ class TokenService:
     # Internals
     # ------------------------------------------------------------------
 
-    def _encode(
-        self,
-        user_id: int,
-        token_type: str,
-        expires_delta: timedelta,
-        now: datetime,
-    ) -> str:
-        payload = {
-            "sub": str(user_id),
-            "type": token_type,
-            "iat": now,
-            "exp": now + expires_delta,
-        }
-        return jwt.encode(payload, self._secret, algorithm=self._algorithm)
-
     def _decode_and_validate(self, token: str, expected_type: str) -> int:
         try:
             payload = jwt.decode(token, self._secret, algorithms=[self._algorithm])
@@ -114,11 +138,25 @@ class TokenService:
                 f"Expected token type '{expected_type}', got '{token_type}'."
             )
 
-        sub = payload.get("sub")
-        if sub is None:
-            raise InvalidRefreshTokenError("Token subject (user_id) is missing.")
+        user_id = None
+        details = payload.get("details")
+        if isinstance(details, dict) and "id" in details:
+            user_id = details["id"]
+        elif "user_id" in payload:
+            user_id = payload["user_id"]
+        else:
+            sub = payload.get("sub")
+            if sub is not None:
+                try:
+                    user_id = int(sub)
+                except (ValueError, TypeError):
+                    pass
+
+        if user_id is None:
+            raise InvalidRefreshTokenError("Token user identifier is missing.")
 
         try:
-            return int(sub)
+            return int(user_id)
         except (ValueError, TypeError):
-            raise InvalidRefreshTokenError("Token subject is not a valid user ID.")
+            raise InvalidRefreshTokenError("Token user identifier is not a valid integer.")
+

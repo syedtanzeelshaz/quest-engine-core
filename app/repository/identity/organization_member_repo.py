@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.model.identity.organization_member import OrganizationMember, OrgMemberStatus
+from app.model.identity.role import Role
 from app.repository.base import BaseRepository
 
 
@@ -34,4 +35,17 @@ class OrganizationMemberRepository(BaseRepository[OrganizationMember]):
     def find_all_by_org(self, org_id: int) -> list[OrganizationMember]:
         """Fetch all member records for an organization."""
         stmt = select(OrganizationMember).where(OrganizationMember.org_id == org_id)
+        return list(self.session.scalars(stmt).all())
+
+    def find_roles_by_user(self, user_id: int) -> list[str]:
+        """Fetch unique active role names assigned to a user across organizations."""
+        stmt = (
+            select(Role.name)
+            .join(OrganizationMember, OrganizationMember.role_id == Role.id)
+            .where(
+                OrganizationMember.user_id == user_id,
+                OrganizationMember.status == OrgMemberStatus.ACTIVE,
+            )
+            .distinct()
+        )
         return list(self.session.scalars(stmt).all())

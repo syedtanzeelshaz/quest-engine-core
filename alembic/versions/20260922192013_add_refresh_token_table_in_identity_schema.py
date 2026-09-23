@@ -41,7 +41,7 @@ def upgrade() -> None:
     )
     
     op.create_index(
-        "ix_refresh_token_user_id",
+        "idx_refresh_token_user_id",
         "refresh_token",
         ["user_id"],
         schema="identity",
@@ -49,5 +49,5 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_index("ix_refresh_token_user_id", table_name="refresh_token", schema="identity")
+    op.drop_index("idx_refresh_token_user_id", table_name="refresh_token", schema="identity")
     op.drop_table("refresh_token", schema="identity")

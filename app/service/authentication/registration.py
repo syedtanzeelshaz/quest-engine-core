@@ -64,7 +64,13 @@ class RegistrationService:
         )
         user = self._user_repo.save_and_flush(user)
 
-        token_pair = self._token_service.issue_pair(user.id)
+        token_pair = self._token_service.issue_pair(
+            user_id=user.id,
+            email=user.email,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            roles=None,
+        )
         self._persist_refresh_token(user.id, token_pair.refresh_token)
 
         return user, token_pair

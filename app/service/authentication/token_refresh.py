@@ -9,8 +9,10 @@ from datetime import datetime, timezone
 
 from app.core.exceptions import InvalidRefreshTokenError
 from app.core.transaction import transactional
+from app.model.identity.app_user import AppUserStatus
 from app.model.identity.refresh_token import RefreshToken
 from app.repository.identity.app_user_repo import AppUserRepository
+from app.repository.identity.organization_member_repo import OrganizationMemberRepository
 from app.repository.identity.refresh_token_repo import RefreshTokenRepository
 from app.service.authentication.models import AuthTokenPair
 from app.service.authentication.token import TokenService
@@ -24,10 +26,12 @@ class TokenRefreshService:
         user_repo: AppUserRepository,
         refresh_token_repo: RefreshTokenRepository,
         token_service: TokenService,
+        org_member_repo: OrganizationMemberRepository,
     ) -> None:
         self._user_repo = user_repo
         self._refresh_token_repo = refresh_token_repo
         self._token_service = token_service
+        self._org_member_repo = org_member_repo
 
     @transactional
     def refresh(self, raw_refresh_token: str) -> AuthTokenPair:
@@ -40,15 +44,16 @@ class TokenRefreshService:
         Steps:
             1. Verify JWT signature and type of the refresh token.
             2. Look up the token hash in DB (must exist, not revoked, not expired).
-            3. Revoke the old refresh token record (rotation).
-            4. Issue a new token pair.
-            5. Persist the new refresh token hash.
+            3. Verify user account status.
+            4. Revoke the old refresh token record (rotation).
+            5. Issue a new token pair with updated user claims and roles.
+            6. Persist the new refresh token hash.
 
         Returns:
             New AuthTokenPair.
 
         Raises:
-            InvalidRefreshTokenError: for any invalid/expired/revoked token.
+            InvalidRefreshTokenError: for any invalid/expired/revoked token or inactive account.
         """
         # 1. Verify JWT signature and type claim
         user_id = self._token_service.verify_refresh_token(raw_refresh_token)
@@ -61,14 +66,29 @@ class TokenRefreshService:
                 "Refresh token not found, already used, or expired."
             )
 
-        # 3. Revoke old token (rotation)
+        # 3. Verify user is active
+        user = self._user_repo.find_by_id(user_id)
+        if user is None or user.status != AppUserStatus.ACTIVE:
+            raise InvalidRefreshTokenError("User account is inactive or not found.")
+
+        # 4. Revoke old token (rotation)
         self._revoke_token_record(stored_token)
 
-        # 4. Issue new pair
-        new_token_pair = self._token_service.issue_pair(user_id)
+        # 5. Look up roles
+        roles = self._org_member_repo.find_roles_by_user(user.id)
+        token_roles = roles if roles else None
 
-        # 5. Persist new refresh token
-        self._persist_refresh_token(user_id, new_token_pair.refresh_token)
+        # 6. Issue new pair
+        new_token_pair = self._token_service.issue_pair(
+            user_id=user.id,
+            email=user.email,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            roles=token_roles,
+        )
+
+        # 7. Persist new refresh token
+        self._persist_refresh_token(user.id, new_token_pair.refresh_token)
 
         return new_token_pair
 

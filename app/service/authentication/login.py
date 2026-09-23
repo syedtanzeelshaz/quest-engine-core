@@ -9,6 +9,7 @@ from app.core.transaction import transactional
 from app.model.identity.app_user import AppUser, AppUserStatus
 from app.model.identity.refresh_token import RefreshToken
 from app.repository.identity.app_user_repo import AppUserRepository
+from app.repository.identity.organization_member_repo import OrganizationMemberRepository
 from app.repository.identity.refresh_token_repo import RefreshTokenRepository
 from app.service.authentication.models import AuthTokenPair, LoginCommand
 from app.service.authentication.password import PasswordService
@@ -24,11 +25,13 @@ class LoginService:
         refresh_token_repo: RefreshTokenRepository,
         password_service: PasswordService,
         token_service: TokenService,
+        org_member_repo: OrganizationMemberRepository,
     ) -> None:
         self._user_repo = user_repo
         self._refresh_token_repo = refresh_token_repo
         self._password_service = password_service
         self._token_service = token_service
+        self._org_member_repo = org_member_repo
 
     @transactional
     def authenticate(self, command: LoginCommand) -> tuple[AppUser, AuthTokenPair]:
@@ -62,7 +65,16 @@ class LoginService:
                 f"User account is not active (status={user.status})."
             )
 
-        token_pair = self._token_service.issue_pair(user.id)
+        roles = self._org_member_repo.find_roles_by_user(user.id)
+        token_roles = roles if roles else None
+
+        token_pair = self._token_service.issue_pair(
+            user_id=user.id,
+            email=user.email,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            roles=token_roles,
+        )
         self._persist_refresh_token(user.id, token_pair.refresh_token)
 
         return user, token_pair

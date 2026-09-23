@@ -6,6 +6,7 @@ from sqlalchemy import (
     Enum as SQLEnum,
     ForeignKey,
     Identity,
+    Index,
     PrimaryKeyConstraint,
     SmallInteger,
     String,
@@ -58,6 +59,7 @@ class OrganizationMember(Base, AuditMetadataMixin):
             name="organization_member_one_org_per_user",
             using="gist",
         ),
+        Index("idx_organization_member_user_id_status", "user_id", "status"),
         {"schema": "identity"},
     )
 
