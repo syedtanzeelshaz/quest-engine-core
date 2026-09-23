@@ -31,9 +31,15 @@ def set_current_session(session: Session | None) -> Token:
     return _session_context.set(session)
 
 
-def reset_current_session(token: Token) -> None:
+def reset_current_session(token: Token | None = None) -> None:
     """Reset the database session context."""
-    _session_context.reset(token)
+    if token is not None:
+        try:
+            _session_context.reset(token)
+            return
+        except ValueError:
+            pass
+    _session_context.set(None)
 
 
 def get_db() -> Generator[Session, None, None]:

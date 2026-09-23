@@ -179,5 +179,7 @@ def register_audit_listeners() -> None:
     """Register audit event listeners on the global SQLAlchemy Session class."""
     if not event.contains(Session, "before_flush", audit_before_flush):
         event.listen(Session, "before_flush", audit_before_flush)
-    if not event.contains(Session, "after_flush", audit_after_flush):
-        event.listen(Session, "after_flush", audit_after_flush)
+    if event.contains(Session, "after_flush", audit_after_flush):
+        event.remove(Session, "after_flush", audit_after_flush)
+    if not event.contains(Session, "after_flush_postexec", audit_after_flush):
+        event.listen(Session, "after_flush_postexec", audit_after_flush)
