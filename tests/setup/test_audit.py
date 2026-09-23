@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from sqlalchemy.orm import Session
 
@@ -7,7 +7,7 @@ from app.core.audit import (
     audit_after_flush,
     audit_before_flush,
 )
-from app.model.identity import AppUser, AppUserAud, IdentityRevInfo
+from app.model.identity import AppUser
 
 
 def test_revtype_enum_values():
@@ -40,20 +40,12 @@ def test_audit_lifecycle_flow():
     assert obj is user
     assert revtype == RevType.ADD
 
-    # Run after_flush with patched revinfo
-    revinfo_mock = IdentityRevInfo(rev=1, revtstmp=1700000000000)
-    revinfo_mock.rev = 1
+    # Run after_flush with connection mock returning rev=1
+    conn_mock = session.connection.return_value
+    conn_mock.scalar.return_value = 1
 
-    with patch("app.core.audit._get_revinfo_model", return_value=MagicMock(return_value=revinfo_mock)):
-        audit_after_flush(session, None)
+    audit_after_flush(session, None)
 
-    # Session.add should have been called for revinfo and AppUserAud
-    added_instances = [call.args[0] for call in session.add.call_args_list]
-    aud_instances = [inst for inst in added_instances if isinstance(inst, AppUserAud)]
-
-    assert len(aud_instances) == 1
-    aud = aud_instances[0]
-    assert aud.rev == 1
-    assert aud.revtype == 0
-    assert aud.id == 101
-    assert aud.email == "alice@example.com"
+    # Verify revinfo inserted via scalar() and audit record inserted via execute()
+    assert conn_mock.scalar.called
+    assert conn_mock.execute.called

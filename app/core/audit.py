@@ -2,7 +2,7 @@ import time
 from collections import defaultdict
 from collections.abc import Callable
 from datetime import datetime, timezone
-from enum import IntEnum
+from enum import Enum, IntEnum
 from typing import Any
 
 from sqlalchemy import event, inspect
@@ -124,62 +124,58 @@ def audit_after_flush(session: Session, flush_context: Any) -> None:
     Post-flush listener that creates RevInfo records and snapshots audit records
     after primary entity IDs have been generated.
     """
-    if session.info.get("_in_audit_flush", False):
-        return
-
     pending: list[tuple[Any, RevType, dict[str, Any] | None]] | None = session.info.pop(
         "audit_pending", None
     )
     if not pending:
         return
 
-    session.info["_in_audit_flush"] = True
-    try:
-        # Group pending changes by target database schema
-        records_by_schema: dict[str, list[tuple[Any, RevType, dict[str, Any] | None]]] = defaultdict(list)
-        for obj, revtype, snapshot in pending:
-            schema_name = getattr(obj.__table__, "schema", None) or "public"
-            records_by_schema[schema_name].append((obj, revtype, snapshot))
+    conn = session.connection()
+    current_timestamp_ms = int(time.time() * 1000)
 
-        current_timestamp_ms = int(time.time() * 1000)
+    # Group pending changes by target database schema
+    records_by_schema: dict[str, list[tuple[Any, RevType, dict[str, Any] | None]]] = defaultdict(list)
+    for obj, revtype, snapshot in pending:
+        schema_name = getattr(obj.__table__, "schema", None) or "public"
+        records_by_schema[schema_name].append((obj, revtype, snapshot))
 
-        for schema_name, items in records_by_schema.items():
-            revinfo_cls = _get_revinfo_model(schema_name)
-            revinfo_record = revinfo_cls(revtstmp=current_timestamp_ms)
-            session.add(revinfo_record)
-            # Flush revinfo record to obtain generated primary key 'rev'
-            session.flush([revinfo_record])
-            rev_id = revinfo_record.rev
+    for schema_name, items in records_by_schema.items():
+        revinfo_cls = _get_revinfo_model(schema_name)
+        revinfo_table = revinfo_cls.__table__
+        stmt = (
+            revinfo_table.insert()
+            .values(revtstmp=current_timestamp_ms)
+            .returning(revinfo_table.c.rev)
+        )
+        rev_id = conn.scalar(stmt)
 
-            for obj, revtype, snapshot in items:
-                aud_cls = AUDIT_REGISTRY[type(obj)]
-                aud_instance = aud_cls()
-                aud_instance.rev = rev_id
-                aud_instance.revtype = int(revtype)
+        for obj, revtype, snapshot in items:
+            aud_cls = AUDIT_REGISTRY[type(obj)]
+            aud_table = aud_cls.__table__
+            row_data: dict[str, Any] = {
+                "rev": rev_id,
+                "revtype": int(revtype),
+            }
 
-                if revtype == RevType.DEL and snapshot is not None:
-                    for key, value in snapshot.items():
-                        if hasattr(aud_instance, key):
-                            setattr(aud_instance, key, value)
-                else:
-                    state = inspect(obj)
-                    for attr in state.mapper.column_attrs:
-                        if hasattr(aud_instance, attr.key):
-                            setattr(aud_instance, attr.key, getattr(obj, attr.key))
+            if revtype == RevType.DEL and snapshot is not None:
+                for key, value in snapshot.items():
+                    if key in aud_table.c:
+                        row_data[key] = value.value if isinstance(value, Enum) else value
+            else:
+                state = inspect(obj)
+                for attr in state.mapper.column_attrs:
+                    if attr.key in aud_table.c:
+                        val = getattr(obj, attr.key)
+                        row_data[attr.key] = val.value if isinstance(val, Enum) else val
 
-                session.add(aud_instance)
-
-        # Flush audit records within the same transaction
-        session.flush()
-    finally:
-        session.info["_in_audit_flush"] = False
+            conn.execute(aud_table.insert().values(**row_data))
 
 
 def register_audit_listeners() -> None:
     """Register audit event listeners on the global SQLAlchemy Session class."""
     if not event.contains(Session, "before_flush", audit_before_flush):
         event.listen(Session, "before_flush", audit_before_flush)
-    if event.contains(Session, "after_flush", audit_after_flush):
-        event.remove(Session, "after_flush", audit_after_flush)
-    if not event.contains(Session, "after_flush_postexec", audit_after_flush):
-        event.listen(Session, "after_flush_postexec", audit_after_flush)
+    if event.contains(Session, "after_flush_postexec", audit_after_flush):
+        event.remove(Session, "after_flush_postexec", audit_after_flush)
+    if not event.contains(Session, "after_flush", audit_after_flush):
+        event.listen(Session, "after_flush", audit_after_flush)
