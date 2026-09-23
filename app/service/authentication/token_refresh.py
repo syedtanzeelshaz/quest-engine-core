@@ -90,7 +90,7 @@ class TokenRefreshService:
         """
         token_hash = self._token_service.hash_token(raw_refresh_token)
 
-        # Look up without active-only filter so we can detect ownership mismatch
+        # Look up without active-only filter to detect ownership mismatch
         # even on already-revoked tokens
         stored_token = self._refresh_token_repo.find_by_token_hash_any(token_hash)
         if stored_token is None:
