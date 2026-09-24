@@ -6,7 +6,7 @@ Handles access and refresh token lifecycle at the cryptographic level only.
 Fully unit-testable in isolation.
 """
 import hashlib
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from jose import JWTError, jwt
 
@@ -56,7 +56,7 @@ class TokenService:
                 type: "refresh"
                 iat, exp
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         access_expire = timedelta(minutes=self._access_expire_minutes)
         refresh_expire = timedelta(days=self._refresh_expire_days)
 
@@ -115,7 +115,7 @@ class TokenService:
 
     def refresh_token_expires_at(self) -> datetime:
         """Return the absolute expiry datetime for a newly issued refresh token."""
-        return datetime.now(timezone.utc) + timedelta(days=self._refresh_expire_days)
+        return datetime.now(UTC) + timedelta(days=self._refresh_expire_days)
 
     @staticmethod
     def hash_token(raw_token: str) -> str:
@@ -160,4 +160,3 @@ class TokenService:
             return int(user_id)
         except (ValueError, TypeError):
             raise err_cls("Token user identifier is not a valid integer.")
-

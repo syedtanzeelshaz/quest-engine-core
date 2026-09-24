@@ -18,8 +18,8 @@ if (
 ):
     fileConfig(config.config_file_name)
 
-# Dynamically inject our application's database URL into Alembic configuration
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+# Dynamically inject our application's synchronous database URL into Alembic configuration
+config.set_main_option("sqlalchemy.url", settings.ALEMBIC_DATABASE_URL)
 
 # Set target metadata for 'autogenerate' support across our models
 target_metadata = Base.metadata

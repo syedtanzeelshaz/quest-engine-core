@@ -22,6 +22,7 @@ from app.model.tenant.datasource_schema_object import (
 from app.model.tenant.revinfo import TenantRevInfo
 
 __all__ = [
+    "DATASOURCE_TYPES_BY_CATEGORY",
     "Agent",
     "AgentAccessPolicy",
     "AgentAccessPolicyAud",
@@ -41,5 +42,4 @@ __all__ = [
     "DatasourceType",
     "SchemaObjectType",
     "TenantRevInfo",
-    "DATASOURCE_TYPES_BY_CATEGORY",
 ]

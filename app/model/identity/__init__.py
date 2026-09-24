@@ -21,7 +21,6 @@ __all__ = [
     "AppUserStatus",
     "IdentityRevInfo",
     "JoinRequest",
-    "RefreshToken",
     "JoinRequestAud",
     "JoinRequestStatus",
     "JoinRequestType",
@@ -31,6 +30,7 @@ __all__ = [
     "OrganizationAud",
     "OrganizationMember",
     "OrganizationMemberAud",
+    "RefreshToken",
     "Role",
     "RoleAud",
 ]

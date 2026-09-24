@@ -1,8 +1,13 @@
-from collections.abc import Generator
+from collections.abc import AsyncGenerator
 from contextvars import ContextVar, Token
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
+from sqlalchemy.orm import DeclarativeBase
 
 from app.core.audit import register_audit_listeners
 from app.core.config import settings
@@ -12,21 +17,37 @@ class Base(DeclarativeBase):
     """Modern SQLAlchemy 2.0 Declarative Base class."""
 
 
-engine = create_engine(settings.DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, expire_on_commit=False, bind=engine)
+# Primary asynchronous database engine powered by asyncpg
+engine: AsyncEngine = create_async_engine(
+    settings.DATABASE_URL,
+    pool_pre_ping=True,
+    pool_size=10,
+    max_overflow=20,
+    pool_recycle=1800,
+    pool_timeout=30,
+)
+
+# Asynchronous session factory
+AsyncSessionLocal = async_sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    autocommit=False,
+    autoflush=False,
+    expire_on_commit=False,
+)
 
 # Register audit event listeners across all sessions
 register_audit_listeners()
 
-_session_context: ContextVar[Session | None] = ContextVar("session_context", default=None)
+_session_context: ContextVar[AsyncSession | None] = ContextVar("session_context", default=None)
 
 
-def get_current_session() -> Session | None:
+def get_current_session() -> AsyncSession | None:
     """Return the active database session from the current context, if any."""
     return _session_context.get()
 
 
-def set_current_session(session: Session | None) -> Token:
+def set_current_session(session: AsyncSession | None) -> Token:
     """Set the active database session in the current context."""
     return _session_context.set(session)
 
@@ -42,16 +63,15 @@ def reset_current_session(token: Token | None = None) -> None:
     _session_context.set(None)
 
 
-def get_db() -> Generator[Session, None, None]:
-    """Dependency that provides a database session per request."""
-    db = SessionLocal()
-    token = set_current_session(db)
-    try:
-        yield db
-        db.commit()
-    except Exception:
-        db.rollback()
-        raise
-    finally:
-        reset_current_session(token)
-        db.close()
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """Dependency that provides an asynchronous database session per request."""
+    async with AsyncSessionLocal() as db:
+        token = set_current_session(db)
+        try:
+            yield db
+            await db.commit()
+        except Exception:
+            await db.rollback()
+            raise
+        finally:
+            reset_current_session(token)

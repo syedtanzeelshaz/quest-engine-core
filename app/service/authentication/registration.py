@@ -31,7 +31,7 @@ class RegistrationService:
         self._token_service = token_service
 
     @transactional
-    def register(self, command: RegisterCommand) -> tuple[AppUser, AuthTokenPair]:
+    async def register(self, command: RegisterCommand) -> tuple[AppUser, AuthTokenPair]:
         """
         Register a new user account.
 
@@ -48,12 +48,12 @@ class RegistrationService:
         Raises:
             EmailAlreadyExistsError: if the email is already registered.
         """
-        if self._user_repo.exists_by_email(command.email):
+        if await self._user_repo.exists_by_email(command.email):
             raise EmailAlreadyExistsError(
                 f"A user with email '{command.email}' already exists."
             )
 
-        password_hash = self._password_service.hash(command.plain_password)
+        password_hash = await self._password_service.hash(command.plain_password)
 
         user = AppUser(
             email=command.email,
@@ -62,7 +62,7 @@ class RegistrationService:
             last_name=command.last_name,
             status=AppUserStatus.ACTIVE,
         )
-        user = self._user_repo.save_and_flush(user)
+        user = await self._user_repo.save_and_flush(user)
 
         token_pair = self._token_service.issue_pair(
             user_id=user.id,
@@ -71,11 +71,11 @@ class RegistrationService:
             last_name=user.last_name,
             roles=None,
         )
-        self._persist_refresh_token(user.id, token_pair.refresh_token)
+        await self._persist_refresh_token(user.id, token_pair.refresh_token)
 
         return user, token_pair
 
-    def _persist_refresh_token(self, user_id: int, raw_refresh_token: str) -> None:
+    async def _persist_refresh_token(self, user_id: int, raw_refresh_token: str) -> None:
         token_hash = self._token_service.hash_token(raw_refresh_token)
         expires_at = self._token_service.refresh_token_expires_at()
         refresh_token = RefreshToken(
@@ -84,4 +84,4 @@ class RegistrationService:
             expires_at=expires_at,
             is_revoked=False,
         )
-        self._refresh_token_repo.save_and_flush(refresh_token)
+        await self._refresh_token_repo.save_and_flush(refresh_token)

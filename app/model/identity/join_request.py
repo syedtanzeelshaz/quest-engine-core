@@ -4,13 +4,15 @@ from enum import StrEnum
 from sqlalchemy import (
     TIMESTAMP,
     BigInteger,
-    Enum as SQLEnum,
     ForeignKey,
     Identity,
     PrimaryKeyConstraint,
     SmallInteger,
     String,
     Text,
+)
+from sqlalchemy import (
+    Enum as SQLEnum,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 

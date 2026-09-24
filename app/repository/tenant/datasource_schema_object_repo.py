@@ -1,5 +1,5 @@
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.model.tenant.datasource_schema_object import DatasourceSchemaObject
 from app.repository.base import BaseRepository
@@ -8,17 +8,18 @@ from app.repository.base import BaseRepository
 class DatasourceSchemaObjectRepository(BaseRepository[DatasourceSchemaObject]):
     """Data access repository for tenant.datasource_schema_object."""
 
-    def __init__(self, session: Session) -> None:
+    def __init__(self, session: AsyncSession) -> None:
         super().__init__(DatasourceSchemaObject, session)
 
-    def find_all_by_datasource(self, datasource_id: int) -> list[DatasourceSchemaObject]:
+    async def find_all_by_datasource(self, datasource_id: int) -> list[DatasourceSchemaObject]:
         """Fetch all discovered schema objects for a datasource."""
         stmt = select(DatasourceSchemaObject).where(
             DatasourceSchemaObject.datasource_id == datasource_id
         )
-        return list(self.session.scalars(stmt).all())
+        res = await self.session.scalars(stmt)
+        return list(res.all())
 
-    def find_all_by_datasource_and_object_name(
+    async def find_all_by_datasource_and_object_name(
         self,
         datasource_id: int,
         object_name: str,
@@ -28,4 +29,5 @@ class DatasourceSchemaObjectRepository(BaseRepository[DatasourceSchemaObject]):
             DatasourceSchemaObject.datasource_id == datasource_id,
             DatasourceSchemaObject.object_name == object_name,
         )
-        return list(self.session.scalars(stmt).all())
+        res = await self.session.scalars(stmt)
+        return list(res.all())

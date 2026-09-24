@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Any
 
 from sqlalchemy import (
+    TIMESTAMP,
     BigInteger,
     Boolean,
     ForeignKey,
@@ -9,8 +10,6 @@ from sqlalchemy import (
     Integer,
     PrimaryKeyConstraint,
     SmallInteger,
-    String,
-    TIMESTAMP,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship

@@ -1,14 +1,15 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 import pytest
-from sqlalchemy.orm import Session
 
 from app.core.exceptions import InvalidCredentialsError, UserNotActiveError
 from app.model.identity.app_user import AppUser, AppUserStatus
 from app.model.identity.refresh_token import RefreshToken
 from app.repository.identity.app_user_repo import AppUserRepository
-from app.repository.identity.organization_member_repo import OrganizationMemberRepository
+from app.repository.identity.organization_member_repo import (
+    OrganizationMemberRepository,
+)
 from app.repository.identity.refresh_token_repo import RefreshTokenRepository
 from app.service.authentication.login import LoginService
 from app.service.authentication.models import AuthTokenPair, LoginCommand
@@ -55,16 +56,17 @@ class TestLoginService:
             expires_in=900,
         )
 
-    def test_authenticate_success(self) -> None:
+    @pytest.mark.anyio
+    async def test_authenticate_success(self) -> None:
         self.mock_user_repo.find_by_email.return_value = self.dummy_user
         self.mock_password_service.verify.return_value = True
         self.mock_org_member_repo.find_roles_by_user.return_value = ["MEMBER"]
         self.mock_token_service.issue_pair.return_value = self.dummy_tokens
         self.mock_token_service.hash_token.return_value = "hashed_refresh_token"
-        self.mock_token_service.refresh_token_expires_at.return_value = datetime(2026, 10, 1, tzinfo=timezone.utc)
+        self.mock_token_service.refresh_token_expires_at.return_value = datetime(2026, 10, 1, tzinfo=UTC)
 
         command = LoginCommand(email="test@example.com", plain_password="validpassword")
-        user, tokens = self.service.authenticate(command)
+        user, tokens = await self.service.authenticate(command)
 
         assert user == self.dummy_user
         assert tokens == self.dummy_tokens
@@ -81,27 +83,30 @@ class TestLoginService:
         assert saved_rt.token_hash == "hashed_refresh_token"
         assert saved_rt.is_revoked is False
 
-    def test_authenticate_user_not_found_raises_invalid_credentials(self) -> None:
+    @pytest.mark.anyio
+    async def test_authenticate_user_not_found_raises_invalid_credentials(self) -> None:
         self.mock_user_repo.find_by_email.return_value = None
 
         command = LoginCommand(email="notfound@example.com", plain_password="password")
         with pytest.raises(InvalidCredentialsError, match="Invalid email or password"):
-            self.service.authenticate(command)
+            await self.service.authenticate(command)
 
         self.mock_password_service.verify.assert_not_called()
         self.mock_refresh_token_repo.save_and_flush.assert_not_called()
 
-    def test_authenticate_wrong_password_raises_invalid_credentials(self) -> None:
+    @pytest.mark.anyio
+    async def test_authenticate_wrong_password_raises_invalid_credentials(self) -> None:
         self.mock_user_repo.find_by_email.return_value = self.dummy_user
         self.mock_password_service.verify.return_value = False
 
         command = LoginCommand(email="test@example.com", plain_password="wrongpassword")
         with pytest.raises(InvalidCredentialsError, match="Invalid email or password"):
-            self.service.authenticate(command)
+            await self.service.authenticate(command)
 
         self.mock_refresh_token_repo.save_and_flush.assert_not_called()
 
-    def test_authenticate_inactive_user_raises_user_not_active_error(self) -> None:
+    @pytest.mark.anyio
+    async def test_authenticate_inactive_user_raises_user_not_active_error(self) -> None:
         inactive_user = AppUser(
             id=2,
             email="inactive@example.com",
@@ -113,6 +118,7 @@ class TestLoginService:
 
         command = LoginCommand(email="inactive@example.com", plain_password="validpassword")
         with pytest.raises(UserNotActiveError, match="not active"):
-            self.service.authenticate(command)
+            await self.service.authenticate(command)
 
         self.mock_refresh_token_repo.save_and_flush.assert_not_called()
+

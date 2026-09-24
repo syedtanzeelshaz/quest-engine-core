@@ -1,5 +1,5 @@
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.model.identity.join_request import JoinRequest, JoinRequestStatus
 from app.repository.base import BaseRepository
@@ -8,10 +8,10 @@ from app.repository.base import BaseRepository
 class JoinRequestRepository(BaseRepository[JoinRequest]):
     """Data access repository for identity.join_request."""
 
-    def __init__(self, session: Session) -> None:
+    def __init__(self, session: AsyncSession) -> None:
         super().__init__(JoinRequest, session)
 
-    def find_pending_by_user_and_org(
+    async def find_pending_by_user_and_org(
         self, user_id: int, org_id: int
     ) -> JoinRequest | None:
         """Fetch an existing PENDING join request or invitation between a user and organization."""
@@ -24,14 +24,16 @@ class JoinRequestRepository(BaseRepository[JoinRequest]):
             )
             .limit(1)
         )
-        return self.session.scalar(stmt)
+        return await self.session.scalar(stmt)
 
-    def find_all_by_org(self, org_id: int) -> list[JoinRequest]:
+    async def find_all_by_org(self, org_id: int) -> list[JoinRequest]:
         """Fetch all requests or invitations for an organization."""
         stmt = select(JoinRequest).where(JoinRequest.org_id == org_id)
-        return list(self.session.scalars(stmt).all())
+        res = await self.session.scalars(stmt)
+        return list(res.all())
 
-    def find_all_by_user(self, user_id: int) -> list[JoinRequest]:
+    async def find_all_by_user(self, user_id: int) -> list[JoinRequest]:
         """Fetch all requests or invitations involving a specific user."""
         stmt = select(JoinRequest).where(JoinRequest.user_id == user_id)
-        return list(self.session.scalars(stmt).all())
+        res = await self.session.scalars(stmt)
+        return list(res.all())

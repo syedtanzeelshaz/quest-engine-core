@@ -1,102 +1,98 @@
-import pytest
 from unittest.mock import MagicMock
-from sqlalchemy.orm import Session
 
-from app.core.database import set_current_session, reset_current_session
+import pytest
+
+from app.core.database import reset_current_session, set_current_session
 from app.core.transaction import transactional
 
 
-def test_transactional_commit_on_success():
-    """Verify @transactional begins a transaction and commits on success."""
-    mock_session = MagicMock(spec=Session)
-    mock_session.in_transaction.return_value = False
-
+@pytest.mark.anyio
+async def test_transactional_commit_on_success(mock_db_session: MagicMock):
+    """Verify @transactional begins an async transaction and commits on success."""
     @transactional
-    def service_method():
+    async def service_method():
         return "success"
 
-    token = set_current_session(mock_session)
+    token = set_current_session(mock_db_session)
     try:
-        result = service_method()
+        result = await service_method()
         assert result == "success"
-        mock_session.begin.assert_called_once()
+        mock_db_session.begin.assert_called_once()
     finally:
         reset_current_session(token)
 
 
-def test_transactional_rollback_on_error():
-    """Verify @transactional rolls back if an exception is raised."""
-    mock_session = MagicMock(spec=Session)
-    mock_session.in_transaction.return_value = False
-
+@pytest.mark.anyio
+async def test_transactional_rollback_on_error(mock_db_session: MagicMock):
+    """Verify @transactional triggers rollback handling if an exception is raised."""
     class DummyError(Exception):
         pass
 
     @transactional
-    def service_method():
+    async def service_method():
         raise DummyError("Failed")
 
-    token = set_current_session(mock_session)
+    token = set_current_session(mock_db_session)
     try:
         with pytest.raises(DummyError):
-            service_method()
-        mock_session.begin.assert_called_once()
+            await service_method()
+        mock_db_session.begin.assert_called_once()
     finally:
         reset_current_session(token)
 
 
-def test_transactional_nested_savepoint():
-    """Verify @transactional creates a nested savepoint if transaction is active."""
-    mock_session = MagicMock(spec=Session)
-    mock_session.in_transaction.return_value = True
+@pytest.mark.anyio
+async def test_transactional_nested_savepoint(mock_db_session: MagicMock):
+    """Verify @transactional creates a nested savepoint if an outer transaction is active."""
+    mock_db_session.in_transaction.return_value = True
 
     @transactional
-    def nested_service_method():
+    async def nested_service_method():
         return "nested"
 
-    token = set_current_session(mock_session)
+    token = set_current_session(mock_db_session)
     try:
-        result = nested_service_method()
+        result = await nested_service_method()
         assert result == "nested"
-        mock_session.begin_nested.assert_called_once()
-        mock_session.begin.assert_not_called()
+        mock_db_session.begin_nested.assert_called_once()
+        mock_db_session.begin.assert_not_called()
     finally:
         reset_current_session(token)
 
 
-def test_transactional_resolves_self_session():
+@pytest.mark.anyio
+async def test_transactional_resolves_self_session(mock_db_session: MagicMock):
     """Verify @transactional resolves session from self.session."""
-    mock_session = MagicMock(spec=Session)
-    mock_session.in_transaction.return_value = False
-
     class DummyService:
         def __init__(self, session):
             self.session = session
 
         @transactional
-        def do_work(self):
+        async def do_work(self):
             return "done"
 
-    service = DummyService(mock_session)
-    result = service.do_work()
+    service = DummyService(mock_db_session)
+    result = await service.do_work()
     assert result == "done"
-    mock_session.begin.assert_called_once()
+    mock_db_session.begin.assert_called_once()
 
 
 @pytest.mark.anyio
-async def test_transactional_async_support():
-    """Verify @transactional works with async functions."""
-    mock_session = MagicMock(spec=Session)
-    mock_session.in_transaction.return_value = False
+async def test_transactional_resolves_repo_session(mock_db_session: MagicMock):
+    """Verify @transactional resolves session from an injected repository on self."""
+    class DummyRepo:
+        def __init__(self, session):
+            self.session = session
 
-    @transactional
-    async def async_service():
-        return "async_done"
+    class DummyService:
+        def __init__(self, repo):
+            self._user_repo = repo
 
-    token = set_current_session(mock_session)
-    try:
-        result = await async_service()
-        assert result == "async_done"
-        mock_session.begin.assert_called_once()
-    finally:
-        reset_current_session(token)
+        @transactional
+        async def do_work(self):
+            return "repo_done"
+
+    service = DummyService(DummyRepo(mock_db_session))
+    result = await service.do_work()
+    assert result == "repo_done"
+    mock_db_session.begin.assert_called_once()

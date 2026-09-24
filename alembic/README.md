@@ -18,7 +18,8 @@ This directory contains the database schema migration scripts and configuration 
 
 ## Directory Structure
 
-* `env.py`: Configuration script loaded during every migration; dynamically reads `settings.DATABASE_URL` and routes versioning into the `alembic` schema.
+* `env.py`: Configuration script loaded during every migration; dynamically reads `settings.ALEMBIC_DATABASE_URL` and routes versioning into the `alembic` schema.
+
 * `script.py.mako`: The Mako template blueprint used when generating new migration script files.
 * `versions/`: Directory containing individual chronological version files (e.g., identity schema creation, tenant tables, audit logs).
 

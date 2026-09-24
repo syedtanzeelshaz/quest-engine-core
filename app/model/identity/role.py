@@ -1,13 +1,13 @@
 from datetime import datetime
 
 from sqlalchemy import (
+    TIMESTAMP,
     BigInteger,
     Identity,
     PrimaryKeyConstraint,
     SmallInteger,
     String,
     Text,
-    TIMESTAMP,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 

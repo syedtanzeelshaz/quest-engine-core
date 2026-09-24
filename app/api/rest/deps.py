@@ -5,21 +5,21 @@ These use FastAPI's Depends() mechanism and are coupled to HTTP request handling
 """
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_user_id_from_token
-from app.core.database import get_db
 from app.api.rest.constants.http_codes import HttpCode
 from app.api.rest.constants.http_messages import HttpMessage
+from app.core.database import get_db
 from app.model.identity.app_user import AppUser, AppUserStatus
 from app.repository.identity.app_user_repo import AppUserRepository
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
-def get_current_user(
+async def get_current_user(
     token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ) -> AppUser:
     """
     REST FastAPI dependency — extracts the Bearer token from the Authorization header,
@@ -32,7 +32,7 @@ def get_current_user(
         HTTPException(401): if the token is invalid, expired, or user is not found/active.
     """
     user_id = get_user_id_from_token(token)
-    user = AppUserRepository(db).find_by_id(user_id)
+    user = await AppUserRepository(db).find_by_id(user_id)
 
     if user is None or user.status != AppUserStatus.ACTIVE:
         raise HTTPException(
@@ -40,3 +40,4 @@ def get_current_user(
             detail=HttpMessage.AUTHENTICATION_REQUIRED,
         )
     return user
+

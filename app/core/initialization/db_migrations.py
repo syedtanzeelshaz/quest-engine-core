@@ -34,7 +34,7 @@ def run_database_migrations() -> None:
         command.upgrade(alembic_cfg, "head")
     except Exception as e:
         log.error(f"CRITICAL: Database migration execution failed: {e}")
-        raise e
+        raise
     finally:
         log.info("Database migration initialization block completed.")
 

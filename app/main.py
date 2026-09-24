@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-import app.model  # noqa: F401 - Pre-load all models, audit listeners, and revinfo metadata
+import app.model
 from app import __version__
 from app.api.rest.routes import auth, health
 from app.core.bootstrap import run_startup_checks
@@ -13,15 +13,11 @@ from app.util.logger import log
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    try:
-        run_startup_checks()
-    except Exception:
-        raise
-
+    await run_startup_checks()
     yield
 
     log.info("Disposing database connection engine pool...")
-    engine.dispose()
+    await engine.dispose()
     log.info("Shutting down Quest Engine Core application...")
 
 

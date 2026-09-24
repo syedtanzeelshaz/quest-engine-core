@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db
 from app.api.rest.constants.http_codes import HttpCode
 from app.api.rest.constants.http_messages import HttpMessage
 from app.api.rest.deps import get_current_user
 from app.core.config import settings
+from app.core.database import get_db
 from app.core.exceptions import (
     EmailAlreadyExistsError,
     InvalidCredentialsError,
@@ -14,12 +14,14 @@ from app.core.exceptions import (
 )
 from app.model.identity.app_user import AppUser
 from app.repository.identity.app_user_repo import AppUserRepository
-from app.repository.identity.organization_member_repo import OrganizationMemberRepository
+from app.repository.identity.organization_member_repo import (
+    OrganizationMemberRepository,
+)
 from app.repository.identity.refresh_token_repo import RefreshTokenRepository
 from app.schema.authentication.auth import (
+    LoginRequest,
     LogoutRequest,
     RefreshRequest,
-    LoginRequest,
     RegisterRequest,
     RegisterResponse,
     TokenResponse,
@@ -47,7 +49,7 @@ def _make_token_response(token_pair) -> TokenResponse:
 
 
 @router.post("/register", response_model=RegisterResponse, status_code=HttpCode._201)
-def register(body: RegisterRequest, db: Session = Depends(get_db)) -> RegisterResponse:
+async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)) -> RegisterResponse:
     """Register a new user account and return JWT tokens."""
     log.info("Received registration request for email: %s", body.email)
 
@@ -58,7 +60,7 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)) -> RegisterRe
         token_service=_token_service,
     )
     try:
-        user, token_pair = service.register(
+        user, token_pair = await service.register(
             RegisterCommand(
                 email=body.email,
                 plain_password=body.password,
@@ -82,7 +84,7 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)) -> RegisterRe
 
 
 @router.post("/login", response_model=TokenResponse, status_code=HttpCode._200)
-def login(body: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
+async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)) -> TokenResponse:
     """Authenticate user credentials and return JWT tokens."""
     log.info("Received login request for email: %s", body.email)
 
@@ -94,7 +96,7 @@ def login(body: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
         org_member_repo=OrganizationMemberRepository(db),
     )
     try:
-        _, token_pair = service.authenticate(
+        _, token_pair = await service.authenticate(
             LoginCommand(email=body.email, plain_password=body.password)
         )
     except InvalidCredentialsError:
@@ -112,7 +114,7 @@ def login(body: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
 
 
 @router.post("/refresh", response_model=TokenResponse, status_code=HttpCode._200)
-def refresh_token(body: RefreshRequest, db: Session = Depends(get_db)) -> TokenResponse:
+async def refresh_token(body: RefreshRequest, db: AsyncSession = Depends(get_db)) -> TokenResponse:
     """Exchange a valid refresh token for a new access + refresh token pair."""
     log.info("Received token refresh request.")
 
@@ -123,7 +125,7 @@ def refresh_token(body: RefreshRequest, db: Session = Depends(get_db)) -> TokenR
         org_member_repo=OrganizationMemberRepository(db),
     )
     try:
-        token_pair = service.refresh(body.refresh_token)
+        token_pair = await service.refresh(body.refresh_token)
     except InvalidRefreshTokenError:
         raise HTTPException(
             status_code=HttpCode._401,
@@ -134,9 +136,9 @@ def refresh_token(body: RefreshRequest, db: Session = Depends(get_db)) -> TokenR
 
 
 @router.post("/logout", status_code=HttpCode._200)
-def logout(
+async def logout(
     body: LogoutRequest,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: AppUser = Depends(get_current_user),
 ) -> dict:
     """
@@ -152,7 +154,7 @@ def logout(
         org_member_repo=OrganizationMemberRepository(db),
     )
     try:
-        service.revoke(body.refresh_token, requesting_user_id=current_user.id)
+        await service.revoke(body.refresh_token, requesting_user_id=current_user.id)
     except InvalidRefreshTokenError:
         raise HTTPException(
             status_code=HttpCode._401,
@@ -160,3 +162,4 @@ def logout(
         )
 
     return {"message": HttpMessage.LOGOUT_SUCCESSFUL}
+

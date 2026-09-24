@@ -1,12 +1,12 @@
 from datetime import datetime
 
 from sqlalchemy import (
+    TIMESTAMP,
     BigInteger,
     ForeignKeyConstraint,
     Identity,
     PrimaryKeyConstraint,
     SmallInteger,
-    TIMESTAMP,
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship

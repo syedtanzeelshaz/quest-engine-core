@@ -1,7 +1,7 @@
 import time
 from collections import defaultdict
 from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum, IntEnum
 from typing import Any
 
@@ -74,7 +74,7 @@ def audit_before_flush(session: Session, flush_context: Any, instances: Any) -> 
 
     pending: list[tuple[Any, RevType, dict[str, Any] | None]] = []
 
-    now_utc = datetime.now(timezone.utc)
+    now_utc = datetime.now(UTC)
 
     # 1. New instances (ADD)
     for obj in session.new:

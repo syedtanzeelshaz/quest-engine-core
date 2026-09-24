@@ -1,13 +1,13 @@
 from datetime import datetime
 
 from sqlalchemy import (
+    TIMESTAMP,
     BigInteger,
     Boolean,
     ForeignKey,
     Identity,
     Index,
     String,
-    TIMESTAMP,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 

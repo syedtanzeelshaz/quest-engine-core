@@ -2,15 +2,17 @@ from datetime import datetime
 from enum import StrEnum
 
 from sqlalchemy import (
+    TIMESTAMP,
     BigInteger,
-    Enum as SQLEnum,
     ForeignKey,
     Identity,
     Index,
     PrimaryKeyConstraint,
     SmallInteger,
     String,
-    TIMESTAMP,
+)
+from sqlalchemy import (
+    Enum as SQLEnum,
 )
 from sqlalchemy.dialects.postgresql import ExcludeConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship

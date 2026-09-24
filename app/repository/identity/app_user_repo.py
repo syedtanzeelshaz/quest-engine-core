@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.model.identity.app_user import AppUser, AppUserStatus
 from app.repository.base import BaseRepository
@@ -10,20 +10,20 @@ from app.repository.base import BaseRepository
 class AppUserRepository(BaseRepository[AppUser]):
     """Data access repository for identity.app_user."""
 
-    def __init__(self, session: Session) -> None:
+    def __init__(self, session: AsyncSession) -> None:
         super().__init__(AppUser, session)
 
-    def find_by_email(self, email: str) -> AppUser | None:
+    async def find_by_email(self, email: str) -> AppUser | None:
         """Fetch a user by their unique email address."""
         stmt = select(AppUser).where(AppUser.email == email).limit(1)
-        return self.session.scalar(stmt)
+        return await self.session.scalar(stmt)
 
-    def exists_by_email(self, email: str) -> bool:
+    async def exists_by_email(self, email: str) -> bool:
         """Check whether a user with the given email exists."""
         stmt = select(1).select_from(AppUser).where(AppUser.email == email).limit(1)
-        return self.session.scalar(stmt) is not None
+        return (await self.session.scalar(stmt)) is not None
 
-    def find_all_by_status_in(
+    async def find_all_by_status_in(
         self,
         statuses: Sequence[AppUserStatus],
     ) -> list[AppUser]:
@@ -31,4 +31,5 @@ class AppUserRepository(BaseRepository[AppUser]):
         if not statuses:
             return []
         stmt = select(AppUser).where(AppUser.status.in_(statuses))
-        return list(self.session.scalars(stmt).all())
+        res = await self.session.scalars(stmt)
+        return list(res.all())

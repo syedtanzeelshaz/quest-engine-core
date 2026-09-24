@@ -2,14 +2,13 @@ from datetime import datetime
 from typing import Any
 
 from sqlalchemy import (
+    TIMESTAMP,
     BigInteger,
     Boolean,
     ForeignKey,
     Identity,
     PrimaryKeyConstraint,
     SmallInteger,
-    String,
-    TIMESTAMP,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship

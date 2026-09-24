@@ -9,7 +9,9 @@ from app.core.transaction import transactional
 from app.model.identity.app_user import AppUser, AppUserStatus
 from app.model.identity.refresh_token import RefreshToken
 from app.repository.identity.app_user_repo import AppUserRepository
-from app.repository.identity.organization_member_repo import OrganizationMemberRepository
+from app.repository.identity.organization_member_repo import (
+    OrganizationMemberRepository,
+)
 from app.repository.identity.refresh_token_repo import RefreshTokenRepository
 from app.service.authentication.models import AuthTokenPair, LoginCommand
 from app.service.authentication.password import PasswordService
@@ -34,7 +36,7 @@ class LoginService:
         self._org_member_repo = org_member_repo
 
     @transactional
-    def authenticate(self, command: LoginCommand) -> tuple[AppUser, AuthTokenPair]:
+    async def authenticate(self, command: LoginCommand) -> tuple[AppUser, AuthTokenPair]:
         """
         Authenticate a user by email and password.
 
@@ -53,11 +55,11 @@ class LoginService:
                 (Same exception for both cases — prevents user enumeration.)
             UserNotActiveError: if the account exists but is not ACTIVE.
         """
-        user = self._user_repo.find_by_email(command.email)
+        user = await self._user_repo.find_by_email(command.email)
         if user is None:
             raise InvalidCredentialsError("Invalid email or password.")
 
-        if not self._password_service.verify(command.plain_password, user.password_hash):
+        if not await self._password_service.verify(command.plain_password, user.password_hash):
             raise InvalidCredentialsError("Invalid email or password.")
 
         if user.status != AppUserStatus.ACTIVE:
@@ -65,7 +67,7 @@ class LoginService:
                 f"User account is not active (status={user.status})."
             )
 
-        roles = self._org_member_repo.find_roles_by_user(user.id)
+        roles = await self._org_member_repo.find_roles_by_user(user.id)
         token_roles = roles if roles else None
 
         token_pair = self._token_service.issue_pair(
@@ -75,11 +77,11 @@ class LoginService:
             last_name=user.last_name,
             roles=token_roles,
         )
-        self._persist_refresh_token(user.id, token_pair.refresh_token)
+        await self._persist_refresh_token(user.id, token_pair.refresh_token)
 
         return user, token_pair
 
-    def _persist_refresh_token(self, user_id: int, raw_refresh_token: str) -> None:
+    async def _persist_refresh_token(self, user_id: int, raw_refresh_token: str) -> None:
         token_hash = self._token_service.hash_token(raw_refresh_token)
         expires_at = self._token_service.refresh_token_expires_at()
         refresh_token = RefreshToken(
@@ -88,4 +90,4 @@ class LoginService:
             expires_at=expires_at,
             is_revoked=False,
         )
-        self._refresh_token_repo.save_and_flush(refresh_token)
+        await self._refresh_token_repo.save_and_flush(refresh_token)

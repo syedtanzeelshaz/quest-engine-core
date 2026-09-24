@@ -18,6 +18,7 @@ from app.model.identity import (
     RoleAud,
 )
 from app.model.tenant import (
+    DATASOURCE_TYPES_BY_CATEGORY,
     Agent,
     AgentAccessPolicy,
     AgentAccessPolicyAud,
@@ -25,7 +26,6 @@ from app.model.tenant import (
     AgentDatasource,
     AgentDatasourceAud,
     AgentStatus,
-    DATASOURCE_TYPES_BY_CATEGORY,
     Datasource,
     DatasourceApprovalStatus,
     DatasourceAud,

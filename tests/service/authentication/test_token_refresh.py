@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 import pytest
@@ -7,7 +7,9 @@ from app.core.exceptions import InvalidRefreshTokenError
 from app.model.identity.app_user import AppUser, AppUserStatus
 from app.model.identity.refresh_token import RefreshToken
 from app.repository.identity.app_user_repo import AppUserRepository
-from app.repository.identity.organization_member_repo import OrganizationMemberRepository
+from app.repository.identity.organization_member_repo import (
+    OrganizationMemberRepository,
+)
 from app.repository.identity.refresh_token_repo import RefreshTokenRepository
 from app.service.authentication.models import AuthTokenPair
 from app.service.authentication.token import TokenService
@@ -47,7 +49,7 @@ class TestTokenRefreshServiceRefresh:
             id=1,
             user_id=7,
             token_hash="old_token_hash",
-            expires_at=datetime(2026, 12, 31, tzinfo=timezone.utc),
+            expires_at=datetime(2026, 12, 31, tzinfo=UTC),
             is_revoked=False,
         )
 
@@ -57,7 +59,8 @@ class TestTokenRefreshServiceRefresh:
             expires_in=900,
         )
 
-    def test_refresh_success_rotates_tokens(self) -> None:
+    @pytest.mark.anyio
+    async def test_refresh_success_rotates_tokens(self) -> None:
         raw_token = "valid_old_refresh_token"
         self.mock_token_service.verify_refresh_token.return_value = 7
         self.mock_token_service.hash_token.side_effect = lambda t: f"hash_of_{t}"
@@ -65,9 +68,9 @@ class TestTokenRefreshServiceRefresh:
         self.mock_user_repo.find_by_id.return_value = self.dummy_user
         self.mock_org_member_repo.find_roles_by_user.return_value = ["ENGINEER"]
         self.mock_token_service.issue_pair.return_value = self.dummy_new_tokens
-        self.mock_token_service.refresh_token_expires_at.return_value = datetime(2027, 1, 1, tzinfo=timezone.utc)
+        self.mock_token_service.refresh_token_expires_at.return_value = datetime(2027, 1, 1, tzinfo=UTC)
 
-        result_tokens = self.service.refresh(raw_token)
+        result_tokens = await self.service.refresh(raw_token)
 
         assert result_tokens == self.dummy_new_tokens
 
@@ -91,17 +94,19 @@ class TestTokenRefreshServiceRefresh:
         assert new_token_record.token_hash == "hash_of_new_refresh_token"
         assert new_token_record.is_revoked is False
 
-    def test_refresh_token_not_found_or_already_used_raises_error(self) -> None:
+    @pytest.mark.anyio
+    async def test_refresh_token_not_found_or_already_used_raises_error(self) -> None:
         self.mock_token_service.verify_refresh_token.return_value = 7
         self.mock_token_service.hash_token.return_value = "unrecognized_hash"
         self.mock_refresh_token_repo.find_by_token_hash.return_value = None
 
         with pytest.raises(InvalidRefreshTokenError, match="not found, already used, or expired"):
-            self.service.refresh("stale_token")
+            await self.service.refresh("stale_token")
 
         self.mock_user_repo.find_by_id.assert_not_called()
 
-    def test_refresh_inactive_user_raises_error(self) -> None:
+    @pytest.mark.anyio
+    async def test_refresh_inactive_user_raises_error(self) -> None:
         self.mock_token_service.verify_refresh_token.return_value = 7
         self.mock_token_service.hash_token.return_value = "valid_hash"
         self.mock_refresh_token_repo.find_by_token_hash.return_value = self.dummy_stored_token
@@ -110,7 +115,7 @@ class TestTokenRefreshServiceRefresh:
         self.mock_user_repo.find_by_id.return_value = inactive_user
 
         with pytest.raises(InvalidRefreshTokenError, match="inactive or not found"):
-            self.service.refresh("valid_token")
+            await self.service.refresh("valid_token")
 
 
 class TestTokenRefreshServiceRevoke:
@@ -135,61 +140,66 @@ class TestTokenRefreshServiceRevoke:
             org_member_repo=self.mock_org_member_repo,
         )
 
-    def test_revoke_active_token_marks_it_revoked(self) -> None:
+    @pytest.mark.anyio
+    async def test_revoke_active_token_marks_it_revoked(self) -> None:
         token_record = RefreshToken(
             id=10,
             user_id=5,
             token_hash="hash_xyz",
             is_revoked=False,
-            expires_at=datetime(2026, 12, 31, tzinfo=timezone.utc),
+            expires_at=datetime(2026, 12, 31, tzinfo=UTC),
         )
         self.mock_token_service.hash_token.return_value = "hash_xyz"
         self.mock_refresh_token_repo.find_by_token_hash_any.return_value = token_record
 
-        self.service.revoke(raw_refresh_token="my_token", requesting_user_id=5)
+        await self.service.revoke(raw_refresh_token="my_token", requesting_user_id=5)
 
         assert token_record.is_revoked is True
         assert token_record.revoked_at is not None
         self.mock_refresh_token_repo.save_and_flush.assert_called_once_with(token_record)
 
-    def test_revoke_token_belonging_to_another_user_raises_error(self) -> None:
+    @pytest.mark.anyio
+    async def test_revoke_token_belonging_to_another_user_raises_error(self) -> None:
         token_record = RefreshToken(
             id=10,
             user_id=999,  # Belongs to user 999
             token_hash="hash_xyz",
             is_revoked=False,
-            expires_at=datetime(2026, 12, 31, tzinfo=timezone.utc),
+            expires_at=datetime(2026, 12, 31, tzinfo=UTC),
         )
         self.mock_token_service.hash_token.return_value = "hash_xyz"
         self.mock_refresh_token_repo.find_by_token_hash_any.return_value = token_record
 
         with pytest.raises(InvalidRefreshTokenError, match="does not belong to the current user"):
-            self.service.revoke(raw_refresh_token="my_token", requesting_user_id=5)
+            await self.service.revoke(raw_refresh_token="my_token", requesting_user_id=5)
 
         assert token_record.is_revoked is False
         self.mock_refresh_token_repo.save_and_flush.assert_not_called()
 
-    def test_revoke_nonexistent_token_succeeds_idempotently(self) -> None:
+    @pytest.mark.anyio
+    async def test_revoke_nonexistent_token_succeeds_idempotently(self) -> None:
         self.mock_token_service.hash_token.return_value = "unknown_hash"
         self.mock_refresh_token_repo.find_by_token_hash_any.return_value = None
 
         # Should not raise any exception
-        self.service.revoke(raw_refresh_token="nonexistent_token", requesting_user_id=5)
+        await self.service.revoke(raw_refresh_token="nonexistent_token", requesting_user_id=5)
         self.mock_refresh_token_repo.save_and_flush.assert_not_called()
 
-    def test_revoke_already_revoked_token_is_idempotent(self) -> None:
+    @pytest.mark.anyio
+    async def test_revoke_already_revoked_token_is_idempotent(self) -> None:
         token_record = RefreshToken(
             id=10,
             user_id=5,
             token_hash="hash_xyz",
             is_revoked=True,
-            revoked_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
-            expires_at=datetime(2026, 12, 31, tzinfo=timezone.utc),
+            revoked_at=datetime(2026, 1, 1, tzinfo=UTC),
+            expires_at=datetime(2026, 12, 31, tzinfo=UTC),
         )
         self.mock_token_service.hash_token.return_value = "hash_xyz"
         self.mock_refresh_token_repo.find_by_token_hash_any.return_value = token_record
 
-        self.service.revoke(raw_refresh_token="my_token", requesting_user_id=5)
+        await self.service.revoke(raw_refresh_token="my_token", requesting_user_id=5)
 
         # Already revoked, so save_and_flush should not be called again
         self.mock_refresh_token_repo.save_and_flush.assert_not_called()
+

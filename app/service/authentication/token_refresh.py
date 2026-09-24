@@ -5,14 +5,16 @@ Handles the full lifecycle of persisted refresh tokens:
   - refresh(): exchange a valid refresh token for a new token pair (with rotation)
   - revoke(): invalidate a refresh token (logout)
 """
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from app.core.exceptions import InvalidRefreshTokenError
 from app.core.transaction import transactional
 from app.model.identity.app_user import AppUserStatus
 from app.model.identity.refresh_token import RefreshToken
 from app.repository.identity.app_user_repo import AppUserRepository
-from app.repository.identity.organization_member_repo import OrganizationMemberRepository
+from app.repository.identity.organization_member_repo import (
+    OrganizationMemberRepository,
+)
 from app.repository.identity.refresh_token_repo import RefreshTokenRepository
 from app.service.authentication.models import AuthTokenPair
 from app.service.authentication.token import TokenService
@@ -34,7 +36,7 @@ class TokenRefreshService:
         self._org_member_repo = org_member_repo
 
     @transactional
-    def refresh(self, raw_refresh_token: str) -> AuthTokenPair:
+    async def refresh(self, raw_refresh_token: str) -> AuthTokenPair:
         """
         Exchange a valid refresh token for a new access + refresh token pair.
 
@@ -60,22 +62,22 @@ class TokenRefreshService:
 
         # 2. Look up the token hash in DB
         token_hash = self._token_service.hash_token(raw_refresh_token)
-        stored_token = self._refresh_token_repo.find_by_token_hash(token_hash)
+        stored_token = await self._refresh_token_repo.find_by_token_hash(token_hash)
         if stored_token is None:
             raise InvalidRefreshTokenError(
                 "Refresh token not found, already used, or expired."
             )
 
         # 3. Verify user is active
-        user = self._user_repo.find_by_id(user_id)
+        user = await self._user_repo.find_by_id(user_id)
         if user is None or user.status != AppUserStatus.ACTIVE:
             raise InvalidRefreshTokenError("User account is inactive or not found.")
 
         # 4. Revoke old token (rotation)
-        self._revoke_token_record(stored_token)
+        await self._revoke_token_record(stored_token)
 
         # 5. Look up roles
-        roles = self._org_member_repo.find_roles_by_user(user.id)
+        roles = await self._org_member_repo.find_roles_by_user(user.id)
         token_roles = roles if roles else None
 
         # 6. Issue new pair
@@ -88,12 +90,12 @@ class TokenRefreshService:
         )
 
         # 7. Persist new refresh token
-        self._persist_refresh_token(user.id, new_token_pair.refresh_token)
+        await self._persist_refresh_token(user.id, new_token_pair.refresh_token)
 
         return new_token_pair
 
     @transactional
-    def revoke(self, raw_refresh_token: str, requesting_user_id: int) -> None:
+    async def revoke(self, raw_refresh_token: str, requesting_user_id: int) -> None:
         """
         Revoke a refresh token (logout).
 
@@ -112,7 +114,7 @@ class TokenRefreshService:
 
         # Look up without active-only filter to detect ownership mismatch
         # even on already-revoked tokens
-        stored_token = self._refresh_token_repo.find_by_token_hash_any(token_hash)
+        stored_token = await self._refresh_token_repo.find_by_token_hash_any(token_hash)
         if stored_token is None:
             # Token not found or already expired — treat as idempotent success
             return
@@ -123,18 +125,18 @@ class TokenRefreshService:
             )
 
         if not stored_token.is_revoked:
-            self._revoke_token_record(stored_token)
+            await self._revoke_token_record(stored_token)
 
     # ------------------------------------------------------------------
     # Internals
     # ------------------------------------------------------------------
 
-    def _revoke_token_record(self, token: RefreshToken) -> None:
+    async def _revoke_token_record(self, token: RefreshToken) -> None:
         token.is_revoked = True
-        token.revoked_at = datetime.now(timezone.utc)
-        self._refresh_token_repo.save_and_flush(token)
+        token.revoked_at = datetime.now(UTC)
+        await self._refresh_token_repo.save_and_flush(token)
 
-    def _persist_refresh_token(self, user_id: int, raw_refresh_token: str) -> None:
+    async def _persist_refresh_token(self, user_id: int, raw_refresh_token: str) -> None:
         token_hash = self._token_service.hash_token(raw_refresh_token)
         expires_at = self._token_service.refresh_token_expires_at()
         refresh_token = RefreshToken(
@@ -143,4 +145,4 @@ class TokenRefreshService:
             expires_at=expires_at,
             is_revoked=False,
         )
-        self._refresh_token_repo.save_and_flush(refresh_token)
+        await self._refresh_token_repo.save_and_flush(refresh_token)

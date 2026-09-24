@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 import pytest
@@ -57,15 +57,16 @@ class TestRegistrationService:
             expires_in=900,
         )
 
-    def test_register_success(self) -> None:
+    @pytest.mark.anyio
+    async def test_register_success(self) -> None:
         self.mock_user_repo.exists_by_email.return_value = False
         self.mock_password_service.hash.return_value = "$2b$12$hashedpwd"
         self.mock_user_repo.save_and_flush.return_value = self.dummy_saved_user
         self.mock_token_service.issue_pair.return_value = self.dummy_tokens
         self.mock_token_service.hash_token.return_value = "hashed_refresh_token"
-        self.mock_token_service.refresh_token_expires_at.return_value = datetime(2026, 10, 1, tzinfo=timezone.utc)
+        self.mock_token_service.refresh_token_expires_at.return_value = datetime(2026, 10, 1, tzinfo=UTC)
 
-        user, tokens = self.service.register(self.dummy_command)
+        user, tokens = await self.service.register(self.dummy_command)
 
         assert user == self.dummy_saved_user
         assert tokens == self.dummy_tokens
@@ -86,12 +87,14 @@ class TestRegistrationService:
         assert saved_rt.token_hash == "hashed_refresh_token"
         assert saved_rt.is_revoked is False
 
-    def test_register_duplicate_email_raises_error(self) -> None:
+    @pytest.mark.anyio
+    async def test_register_duplicate_email_raises_error(self) -> None:
         self.mock_user_repo.exists_by_email.return_value = True
 
         with pytest.raises(EmailAlreadyExistsError, match="already exists"):
-            self.service.register(self.dummy_command)
+            await self.service.register(self.dummy_command)
 
         self.mock_password_service.hash.assert_not_called()
         self.mock_user_repo.save_and_flush.assert_not_called()
         self.mock_refresh_token_repo.save_and_flush.assert_not_called()
+

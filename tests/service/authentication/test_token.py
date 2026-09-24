@@ -1,7 +1,7 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
-from jose import jwt
 import pytest
+from jose import jwt
 
 from app.core.config import Settings
 from app.core.exceptions import InvalidRefreshTokenError, InvalidTokenError
@@ -86,8 +86,8 @@ class TestTokenServiceVerifyAccessToken:
             "sub": "user@example.com",
             "details": {"id": 99},
             "type": "access",
-            "iat": datetime.now(timezone.utc) - timedelta(hours=2),
-            "exp": datetime.now(timezone.utc) - timedelta(hours=1),
+            "iat": datetime.now(UTC) - timedelta(hours=2),
+            "exp": datetime.now(UTC) - timedelta(hours=1),
         }
         expired_token = jwt.encode(
             expired_payload,
@@ -129,8 +129,8 @@ class TestTokenServiceVerifyRefreshToken:
             "sub": "user@example.com",
             "user_id": 88,
             "type": "refresh",
-            "iat": datetime.now(timezone.utc) - timedelta(days=10),
-            "exp": datetime.now(timezone.utc) - timedelta(days=1),
+            "iat": datetime.now(UTC) - timedelta(days=10),
+            "exp": datetime.now(UTC) - timedelta(days=1),
         }
         expired_token = jwt.encode(
             expired_payload,
@@ -171,7 +171,7 @@ class TestTokenServiceUtilities:
         assert payload["details"]["id"] == 10
 
     def test_refresh_token_expires_at_is_in_future(self) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         expires_at = self.service.refresh_token_expires_at()
 
         assert expires_at > now

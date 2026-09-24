@@ -2,14 +2,16 @@ from datetime import date, datetime
 from enum import StrEnum
 
 from sqlalchemy import (
+    TIMESTAMP,
     BigInteger,
     Date,
-    Enum as SQLEnum,
     Identity,
     PrimaryKeyConstraint,
     SmallInteger,
     String,
-    TIMESTAMP,
+)
+from sqlalchemy import (
+    Enum as SQLEnum,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
