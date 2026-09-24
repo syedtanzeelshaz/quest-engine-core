@@ -20,3 +20,4 @@ docs/
 # IDE settings
 .vscode/
 .idea/
+.agents/
