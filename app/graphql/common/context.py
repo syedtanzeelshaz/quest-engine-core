@@ -15,7 +15,7 @@ from strawberry.fastapi import BaseContext
 from app.api.constants import AUTH_TOKEN_URL
 from app.core.config import settings
 from app.core.database import get_db
-from app.core.exceptions import InvalidTokenError
+from app.core.primitives.exceptions import InvalidTokenError
 from app.graphql.organization.loaders import (
     create_org_users_loader,
     create_organization_loader,

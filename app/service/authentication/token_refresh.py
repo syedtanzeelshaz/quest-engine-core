@@ -7,7 +7,7 @@ Handles the full lifecycle of persisted refresh tokens:
 """
 from datetime import UTC, datetime
 
-from app.core.exceptions import InvalidRefreshTokenError
+from app.core.primitives.exceptions import InvalidRefreshTokenError
 from app.core.transaction import transactional
 from app.model.identity.app_user import AppUserStatus
 from app.model.identity.refresh_token import RefreshToken

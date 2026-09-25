@@ -2,7 +2,7 @@
 import re
 from datetime import date
 
-from app.core.exceptions import InvalidInputError
+from app.core.primitives.exceptions import InvalidInputError
 from app.graphql.user.inputs import UpdateUserProfileInput
 from app.util.logger import log
 

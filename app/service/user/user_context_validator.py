@@ -4,8 +4,8 @@ UserContextValidator — identity, tenancy, and role validation for caller conte
 Guards request contexts against missing authentication, missing organization tenancy,
 or insufficient administrator privileges.
 """
-from app.core.constants import SecurityMessage
-from app.core.exceptions import (
+from app.core.primitives.constants import SecurityMessage
+from app.core.primitives.exceptions import (
     AccessDeniedError,
     AuthenticationRequiredError,
     OrganizationRequiredError,

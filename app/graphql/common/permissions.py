@@ -7,7 +7,7 @@ Failures return structured GraphQL errors without failing HTTP status.
 from strawberry.permission import BasePermission
 from strawberry.types import Info
 
-from app.core.constants import SecurityMessage
+from app.core.primitives.constants import SecurityMessage
 from app.graphql.common.context import GraphQLContext
 from app.service.user.models import AdminRole
 

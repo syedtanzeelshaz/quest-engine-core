@@ -2,7 +2,7 @@
 import strawberry
 from strawberry.types import Info
 
-from app.core.constants import OrganizationMessage
+from app.core.primitives.constants import OrganizationMessage
 from app.graphql.common.context import GraphQLContext
 from app.graphql.common.permissions import IsAuthenticated
 from app.graphql.organization import mappers

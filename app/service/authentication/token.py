@@ -11,7 +11,7 @@ from datetime import UTC, datetime, timedelta
 from jose import JWTError, jwt
 
 from app.core.config import Settings
-from app.core.exceptions import InvalidRefreshTokenError, InvalidTokenError
+from app.core.primitives.exceptions import InvalidRefreshTokenError, InvalidTokenError
 from app.service.authentication.models import AuthTokenPair
 
 _ACCESS_TOKEN_TYPE = "access"

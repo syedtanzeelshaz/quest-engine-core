@@ -4,7 +4,7 @@ LoginService — user authentication orchestration.
 Coordinates credential verification, account status check,
 JWT token pair issuance, and refresh token persistence.
 """
-from app.core.exceptions import InvalidCredentialsError, UserNotActiveError
+from app.core.primitives.exceptions import InvalidCredentialsError, UserNotActiveError
 from app.core.transaction import transactional
 from app.model.identity.app_user import AppUser, AppUserStatus
 from app.model.identity.refresh_token import RefreshToken

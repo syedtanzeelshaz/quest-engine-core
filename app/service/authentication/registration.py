@@ -4,7 +4,7 @@ RegistrationService — user registration orchestration.
 Coordinates email uniqueness check, password hashing, user creation,
 and initial JWT token pair issuance (with refresh token persistence).
 """
-from app.core.exceptions import EmailAlreadyExistsError
+from app.core.primitives.exceptions import EmailAlreadyExistsError
 from app.core.transaction import transactional
 from app.model.identity.app_user import AppUser, AppUserStatus
 from app.model.identity.refresh_token import RefreshToken

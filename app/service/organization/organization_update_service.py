@@ -1,5 +1,5 @@
 """Organization update domain service."""
-from app.core.exceptions import OrganizationNotFoundError
+from app.core.primitives.exceptions import OrganizationNotFoundError
 from app.core.transaction import transactional
 from app.graphql.organization.inputs import UpdateOrganizationInput
 from app.model.identity.organization import Organization

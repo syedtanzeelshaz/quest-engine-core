@@ -6,7 +6,7 @@ from app.api.rest.constants.http_messages import HttpMessage
 from app.api.rest.deps import get_current_user
 from app.core.config import settings
 from app.core.database import get_db
-from app.core.exceptions import (
+from app.core.primitives.exceptions import (
     EmailAlreadyExistsError,
     InvalidCredentialsError,
     InvalidRefreshTokenError,

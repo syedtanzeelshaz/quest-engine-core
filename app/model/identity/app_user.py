@@ -17,7 +17,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.audit import audited
 from app.core.database import Base
-from app.core.enums import CountryCode, Gender
+from app.core.primitives.enums import CountryCode, Gender
 from app.model.base import AuditMetadataMixin
 
 

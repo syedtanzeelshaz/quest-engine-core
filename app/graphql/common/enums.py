@@ -1,7 +1,7 @@
 """Common domain GraphQL enums."""
 import strawberry
 
-from app.core.enums import CountryCode, Gender
+from app.core.primitives.enums import CountryCode, Gender
 
 Gender = strawberry.enum(
     Gender,

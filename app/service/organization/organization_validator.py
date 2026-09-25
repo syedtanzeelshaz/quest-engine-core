@@ -1,6 +1,6 @@
 """Organization domain validator."""
-from app.core.constants import OrganizationMessage
-from app.core.exceptions import SlugAlreadyExistsError
+from app.core.primitives.constants import OrganizationMessage
+from app.core.primitives.exceptions import SlugAlreadyExistsError
 from app.repository.identity.organization_repo import OrganizationRepository
 from app.util.logger import log
 

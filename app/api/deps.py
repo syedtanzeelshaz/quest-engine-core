@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from app.api.rest.constants.http_codes import HttpCode
 from app.api.rest.constants.http_messages import HttpMessage
 from app.core.config import settings
-from app.core.exceptions import InvalidTokenError
+from app.core.primitives.exceptions import InvalidTokenError
 from app.service.authentication.token import TokenService
 
 _token_service = TokenService(settings)

@@ -57,4 +57,3 @@ class SlugAlreadyExistsError(Exception):
 
 class InvalidInputError(Exception):
     """Raised when user or domain input fails validation constraints."""
-

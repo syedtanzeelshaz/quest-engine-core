@@ -4,7 +4,7 @@ import pytest
 from jose import jwt
 
 from app.core.config import Settings
-from app.core.exceptions import InvalidRefreshTokenError, InvalidTokenError
+from app.core.primitives.exceptions import InvalidRefreshTokenError, InvalidTokenError
 from app.service.authentication.token import TokenService
 
 
