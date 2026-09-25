@@ -46,3 +46,11 @@ class OrganizationRequiredError(Exception):
 class AccessDeniedError(Exception):
     """Raised when a user lacks required permissions or roles."""
 
+
+class OrganizationNotFoundError(Exception):
+    """Raised when an organization is not found by ID or slug."""
+
+
+class SlugAlreadyExistsError(Exception):
+    """Raised when creating an organization with a slug that already exists."""
+

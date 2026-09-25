@@ -2,7 +2,7 @@
 import strawberry
 from strawberry.types import Info
 
-from app.graphql.common.constants import GraphQLMessage
+from app.core.constants import UserMessage
 from app.graphql.common.context import GraphQLContext
 from app.graphql.common.permissions import IsAuthenticated
 from app.graphql.user import mappers
@@ -30,6 +30,6 @@ class UserDataFetcher:
         user = await user_service.get_user_by_id(current_user.id)
         if user is None:
             log.warning("[current_user] User not found for user_id=%s", current_user.id)
-            raise Exception(GraphQLMessage.USER_NOT_FOUND)
+            raise Exception(UserMessage.USER_NOT_FOUND)
 
         return mappers.user_to_type(user)

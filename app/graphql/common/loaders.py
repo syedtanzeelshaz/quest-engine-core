@@ -33,7 +33,7 @@ async def batch_fetch_by_id(
     3. Maps ORM -> GraphQL.
     4. Preserves input key ordering (fills missing records with None).
     """
-    log.info("[DataLoader:%s] Batch fetching %d item(s)", name, len(keys))
+    log.info("[batch_fetch_by_id] Batch fetching %s for %d item(s)", name, len(keys))
 
     entities = await fetch_fn(keys)
     entity_map = {key_extractor(e): map_fn(e) for e in entities}

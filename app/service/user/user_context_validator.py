@@ -26,7 +26,7 @@ class UserContextValidator:
         Returns the non-null CurrentUser or raises AuthenticationRequiredError.
         """
         if user is None:
-            log.warning("[UserContextValidator] Access denied: unauthenticated caller context")
+            log.warning("[require_authenticated_user] Access denied: unauthenticated caller context")
             raise AuthenticationRequiredError(SecurityMessage.AUTHENTICATION_REQUIRED)
         return user
 
@@ -37,7 +37,7 @@ class UserContextValidator:
         """
         current_user = self.require_authenticated_user(user)
         if current_user.org_id is None:
-            log.warning("[UserContextValidator] Access denied: user_id=%s missing organization membership", current_user.id)
+            log.warning("[require_org_member] Access denied: user_id=%s missing organization membership", current_user.id)
             raise OrganizationRequiredError(SecurityMessage.ORGANIZATION_MEMBERSHIP_REQUIRED)
         return current_user
 
@@ -49,11 +49,6 @@ class UserContextValidator:
         current_user = self.require_org_member(user)
         admin_roles = {AdminRole.SUPER_ADMIN, AdminRole.ADMIN}
         if not any(role in admin_roles for role in current_user.roles):
-            log.warning(
-                "[UserContextValidator] Access denied: user_id=%s has roles=%s, requires admin privileges",
-                current_user.id,
-                current_user.roles,
-            )
+            log.warning("[require_org_admin] Access denied: user_id=%s has roles=%s, requires admin privileges", current_user.id, current_user.roles)
             raise AccessDeniedError(SecurityMessage.ADMIN_ACCESS_REQUIRED)
         return current_user
-

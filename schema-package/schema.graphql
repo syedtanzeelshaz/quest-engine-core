@@ -6,6 +6,13 @@ enum AppUserStatus {
   SUSPENDED
 }
 
+"""Input payload for creating a new tenant organization."""
+input CreateOrganizationInput {
+  name: String!
+  slug: String!
+  description: String = null
+}
+
 """Date (isoformat)"""
 scalar Date
 
@@ -16,16 +23,55 @@ type Mutation {
   """Update profile details for the currently authenticated user."""
   updateUserProfile(input: UpdateUserProfileInput!): User!
 
+  """Create a new tenant organization and assign caller as super admin."""
+  createOrganization(input: CreateOrganizationInput!): Organization!
+
+  """Update organization details (requires organization admin privileges)."""
+  updateOrganization(id: ID!, input: UpdateOrganizationInput!): Organization!
+
   """Placeholder mutation until all domain mutators are registered."""
   ping: String!
+}
+
+"""Tenant organization lifecycle status."""
+enum OrgStatus {
+  ACTIVE
+  DELETED
+  DRAFT
+  INACTIVE
+}
+
+"""Tenant organization representation."""
+type Organization {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String
+  status: OrgStatus
+  createdAt: DateTime
+  updatedAt: DateTime
+
+  """Active members belonging to this organization."""
+  users: [User!]!
 }
 
 type Query {
   """Retrieve profile details for the currently authenticated user."""
   currentUser: User!
 
+  """
+  Retrieve organization details by id, slug, or default to caller's active organization.
+  """
+  organization(id: ID = null, slug: String = null): Organization!
+
   """Health and connectivity check for GraphQL API."""
   ping: String!
+}
+
+"""Input payload for updating organization details."""
+input UpdateOrganizationInput {
+  name: String = null
+  description: String = null
 }
 
 """Input payload for updating the authenticated user's profile."""

@@ -1,7 +1,6 @@
 from app.graphql.common.constants import (
     DEFAULT_SCHEMA_OUTPUT_PATH,
     GRAPHIQL_IDE,
-    GraphQLMessage,
 )
 from app.graphql.common.context import (
     GraphQLContext,
@@ -20,12 +19,9 @@ __all__ = [
     "DEFAULT_SCHEMA_OUTPUT_PATH",
     "GRAPHIQL_IDE",
     "GraphQLContext",
-    "GraphQLMessage",
     "RequestLoaders",
     "get_graphql_context",
     "IsAuthenticated",
     "IsOrgAdmin",
     "IsOrgMember",
 ]
-
-

@@ -4,7 +4,7 @@ GraphQL Context & Request Loader definitions.
 Provides per-request state propagation (Database session, CurrentUser, and DataLoaders)
 to all GraphQL field resolvers via Strawberry's Info object.
 """
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
@@ -16,6 +16,11 @@ from app.api.constants import AUTH_TOKEN_URL
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.exceptions import InvalidTokenError
+from app.graphql.organization.loaders import (
+    create_org_users_loader,
+    create_organization_loader,
+)
+from app.graphql.organization.types import OrganizationType
 from app.graphql.user.loaders import create_user_loader
 from app.graphql.user.types import UserType
 from app.model.identity.app_user import AppUserStatus
@@ -44,11 +49,15 @@ class RequestLoaders:
     across nested resolvers and prevent cross-request cache leaks.
     """
     user_by_id: DataLoader[int, UserType | None]
+    org_by_id: DataLoader[int, OrganizationType | None]
+    users_by_org_id: DataLoader[int, list[UserType]]
 
     @classmethod
     def create(cls, db: AsyncSession) -> "RequestLoaders":
         return cls(
             user_by_id=create_user_loader(db),
+            org_by_id=create_organization_loader(db),
+            users_by_org_id=create_org_users_loader(db),
         )
 
 
@@ -96,13 +105,13 @@ async def get_optional_current_user(
     try:
         user_id = _token_service.verify_access_token(token)
     except InvalidTokenError:
-        log.warning("[GraphQLContext] Token verification failed: invalid or expired access token")
+        log.warning("[get_optional_current_user] Token verification failed: invalid or expired access token")
         return None
 
     user_repo = AppUserRepository(db)
     user = await user_repo.find_by_id(user_id)
     if user is None or user.status != AppUserStatus.ACTIVE:
-        log.warning("[GraphQLContext] Caller resolution failed: user_id=%s not found or inactive", user_id)
+        log.warning("[get_optional_current_user] Caller resolution failed: user_id=%s not found or inactive", user_id)
         return None
 
     org_member_repo = OrganizationMemberRepository(db)
@@ -110,7 +119,7 @@ async def get_optional_current_user(
     org_id = memberships[0].org_id if memberships else None
     roles = await org_member_repo.find_roles_by_user(user.id)
 
-    log.info("[GraphQLContext] Resolved authenticated caller: user_id=%s, org_id=%s", user.id, org_id)
+    log.info("[get_optional_current_user] Resolved authenticated caller: user_id=%s, org_id=%s", user.id, org_id)
 
     return CurrentUser(
         id=user.id,
