@@ -22,6 +22,7 @@ dependencies = [
 
 [project.scripts]
 dev = "app:main"
+export-schema = "app.graphql.exporter:main"
 test = "pytest:main"
 
 [dependency-groups]

@@ -1,0 +1,10 @@
+{
+  "name": "@quest-engine/schema",
+  "version": "0.0.0",
+  "description": "Quest Engine GraphQL schema — auto-generated. Do not edit manually.",
+  "main": "schema.graphql",
+  "files": [
+    "schema.graphql",
+    "README.md"
+  ]
+}

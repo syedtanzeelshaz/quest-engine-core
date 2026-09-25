@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import app.model
 from app import __version__
+from app.api.graphql.router import graphql_router
 from app.api.rest.routes import auth, health
 from app.core.bootstrap import run_startup_checks
 from app.core.database import engine
@@ -41,6 +42,9 @@ def create_app() -> FastAPI:
 
     # REST API routes
     app.include_router(auth.router, prefix="/api/v1")
+
+    # GraphQL API endpoint
+    app.include_router(graphql_router, prefix="/graphql")
 
     return app
 

@@ -29,3 +29,19 @@ class AuthTokenPair:
     access_token: str
     refresh_token: str
     expires_in: int  # access token TTL in seconds
+
+
+@dataclass(frozen=True)
+class CurrentUser:
+    """
+    Authenticated user context for requests.
+
+    Used across GraphQL context, authorization policies, and service layers.
+    """
+    id: int
+    email: str
+    first_name: str | None = None
+    last_name: str | None = None
+    org_id: int | None = None
+    roles: tuple[str, ...] = ()
+

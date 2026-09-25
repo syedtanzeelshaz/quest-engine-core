@@ -1,0 +1,9 @@
+type Mutation {
+  """Placeholder mutation until domain mutators are registered."""
+  ping: String!
+}
+
+type Query {
+  """Health and connectivity check for GraphQL API."""
+  ping: String!
+}
