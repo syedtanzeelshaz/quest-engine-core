@@ -69,7 +69,7 @@ class RegistrationService:
             email=user.email,
             first_name=user.first_name,
             last_name=user.last_name,
-            roles=None,
+            roles=None, # No role assigned on initial registration
         )
         await self._persist_refresh_token(user.id, token_pair.refresh_token)
 
