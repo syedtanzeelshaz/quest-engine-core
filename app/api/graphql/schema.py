@@ -30,7 +30,7 @@ class Mutation(
     UserDataMutator,
     OrganizationDataMutator,
 ):
-    @strawberry.mutation(description="Placeholder mutation until all domain mutators are registered.")
+    @strawberry.mutation(description="Health and connectivity check for GraphQL API.")
     def ping(self) -> str:
         return "pong"
 

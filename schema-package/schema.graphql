@@ -21,7 +21,7 @@ type Mutation {
   """Update organization details (requires organization admin privileges)."""
   updateOrganization(id: ID!, input: UpdateOrganizationInput!): Organization!
 
-  """Placeholder mutation until all domain mutators are registered."""
+  """Health and connectivity check for GraphQL API."""
   ping: String!
 }
 
