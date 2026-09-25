@@ -1,3 +1,11 @@
+"""Account lifecycle status for an application user."""
+enum AppUserStatus {
+  ACTIVE
+  DELETED
+  INACTIVE
+  SUSPENDED
+}
+
 """Date (isoformat)"""
 scalar Date
 
@@ -40,15 +48,7 @@ type User {
   country: String
   gender: String
   dateOfBirth: Date
-  status: UserStatus
+  status: AppUserStatus
   createdAt: DateTime
   updatedAt: DateTime
-}
-
-"""Account lifecycle status for an application user."""
-enum UserStatus {
-  ACTIVE
-  INACTIVE
-  SUSPENDED
-  DELETED
 }
