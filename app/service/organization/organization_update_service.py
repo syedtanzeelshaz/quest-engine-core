@@ -13,6 +13,7 @@ class OrganizationUpdateService:
     def __init__(self, org_repo: OrganizationRepository) -> None:
         self._org_repo = org_repo
 
+
     @transactional
     async def update(
         self,

@@ -8,7 +8,8 @@ from app.graphql.user import mappers
 from app.graphql.user.inputs import UpdateUserProfileInput
 from app.graphql.user.types import UserType
 from app.repository.identity.app_user_repo import AppUserRepository
-from app.service.user.user_service import UserService
+from app.service.user.user_update_service import UserUpdateService
+from app.service.user.user_validator import UserValidator
 from app.util.logger import log
 
 
@@ -27,12 +28,16 @@ class UserDataMutator:
     ) -> UserType:
         ctx = info.context
         current_user = ctx.require_user()
-        log.info("[update_user_profile] Mutation request received for user_id=%s", current_user.id)
+        log.info("[update_user_profile] Mutation received: user_id=%s", current_user.id)
 
         user_repo = AppUserRepository(ctx.db)
-        user_service = UserService(user_repo=user_repo)
+        user_validator = UserValidator()
+        user_update_service = UserUpdateService(
+            user_repo=user_repo,
+            user_validator=user_validator,
+        )
 
-        updated_user = await user_service.update_profile(
+        updated_user = await user_update_service.update(
             user_id=current_user.id,
             input_data=input,
         )

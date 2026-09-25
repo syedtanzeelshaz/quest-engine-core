@@ -8,7 +8,7 @@ from app.graphql.common.permissions import IsAuthenticated
 from app.graphql.user import mappers
 from app.graphql.user.types import UserType
 from app.repository.identity.app_user_repo import AppUserRepository
-from app.service.user.user_service import UserService
+from app.service.user.user_query_service import UserQueryService
 from app.util.logger import log
 
 
@@ -25,9 +25,9 @@ class UserDataFetcher:
         log.info("[current_user] Fetching profile for user_id=%s", current_user.id)
 
         user_repo = AppUserRepository(info.context.db)
-        user_service = UserService(user_repo=user_repo)
+        user_query_service = UserQueryService(user_repo=user_repo)
 
-        user = await user_service.get_user_by_id(current_user.id)
+        user = await user_query_service.get_by_id(current_user.id)
         if user is None:
             log.warning("[current_user] User not found for user_id=%s", current_user.id)
             raise Exception(UserMessage.USER_NOT_FOUND)

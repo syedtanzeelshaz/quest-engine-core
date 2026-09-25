@@ -13,20 +13,24 @@ class OrganizationQueryService:
     def __init__(self, org_repo: OrganizationRepository) -> None:
         self._org_repo = org_repo
 
+
     async def get_by_id(self, org_id: int) -> Organization | None:
         """Fetch an organization by its primary key ID."""
         log.info("[get_by_id] Fetching organization for org_id=%s", org_id)
         return await self._org_repo.find_by_id(org_id)
+
 
     async def get_by_slug(self, slug: str) -> Organization | None:
         """Fetch an organization by its unique URL slug."""
         log.info("[get_by_slug] Fetching organization for slug=%s", slug)
         return await self._org_repo.find_by_slug(slug)
 
+
     async def get_by_ids(self, org_ids: Sequence[int]) -> list[Organization]:
         """Fetch organizations matching a sequence of IDs."""
         log.info("[get_by_ids] Batch fetching organizations for %d ID(s)", len(org_ids))
         return await self._org_repo.find_all_by_ids(org_ids)
+
 
     async def get_active_users_by_org_ids(
         self,

@@ -11,6 +11,7 @@ class OrganizationValidator:
     def __init__(self, org_repo: OrganizationRepository) -> None:
         self._org_repo = org_repo
 
+
     async def validate_slug_availability(self, slug: str) -> None:
         """
         Ensure the slug is not already taken by an existing organization.

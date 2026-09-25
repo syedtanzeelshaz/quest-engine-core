@@ -1,24 +1,28 @@
-"""User domain service."""
+"""User update domain service."""
+from app.core.constants import UserMessage
 from app.core.exceptions import UserNotFoundError
 from app.core.transaction import transactional
 from app.graphql.user.inputs import UpdateUserProfileInput
 from app.model.identity.app_user import AppUser
 from app.repository.identity.app_user_repo import AppUserRepository
+from app.service.user.user_validator import UserValidator
 from app.util.logger import log
 
 
-class UserService:
-    """Core domain service for user profile operations."""
+class UserUpdateService:
+    """Domain service handling user profile and attribute updates."""
 
-    def __init__(self, user_repo: AppUserRepository) -> None:
+    def __init__(
+        self,
+        user_repo: AppUserRepository,
+        user_validator: UserValidator,
+    ) -> None:
         self._user_repo = user_repo
+        self._user_validator = user_validator
 
-    async def get_user_by_id(self, user_id: int) -> AppUser | None:
-        """Fetch an application user by their primary key ID."""
-        return await self._user_repo.find_by_id(user_id)
 
     @transactional
-    async def update_profile(
+    async def update(
         self,
         user_id: int,
         input_data: UpdateUserProfileInput,
@@ -28,12 +32,16 @@ class UserService:
 
         Raises:
             UserNotFoundError: If no user with the given ID exists.
+            InvalidInputError: If any profile field fails domain validation.
         """
+        log.info("[update] Updating user profile for user_id=%s, with input=%s", user_id, input_data)
+
+        self._user_validator.validate_user_update_inputs(input_data)
+
         user = await self._user_repo.find_by_id(user_id)
         if user is None:
-            raise UserNotFoundError(f"User with ID {user_id} not found.")
-
-        log.info("[update_profile] Updating user profile for user_id=%s, with input=%s", user_id, input_data)
+            log.warning("[update] User with user_id=%s not found", user_id)
+            raise UserNotFoundError(UserMessage.USER_NOT_FOUND)
 
         if input_data.first_name is not None:
             user.first_name = input_data.first_name
@@ -49,6 +57,6 @@ class UserService:
             user.date_of_birth = input_data.date_of_birth
 
         updated_user = await self._user_repo.save_and_flush(user)
-        log.info("[update_profile] Updated user profile for user_id=%s successfully", user_id)
+        log.info("[update] Updated user profile for user_id=%s successfully", user_id)
 
         return updated_user

@@ -17,6 +17,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.audit import audited
 from app.core.database import Base
+from app.core.enums import CountryCode, Gender
 from app.model.base import AuditMetadataMixin
 
 
@@ -77,8 +78,14 @@ class AppUser(Base, AuditMetadataMixin):
     )
     first_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     last_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    gender: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    country: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    gender: Mapped[Gender | None] = mapped_column(
+        SQLEnum(Gender, native_enum=False, length=50),
+        nullable=True,
+    )
+    country: Mapped[CountryCode | None] = mapped_column(
+        SQLEnum(CountryCode, native_enum=False, length=50),
+        nullable=True,
+    )
     date_of_birth: Mapped[date | None] = mapped_column(Date(), nullable=True)
     phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
     status: Mapped[AppUserStatus | None] = mapped_column(

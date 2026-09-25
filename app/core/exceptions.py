@@ -54,3 +54,7 @@ class OrganizationNotFoundError(Exception):
 class SlugAlreadyExistsError(Exception):
     """Raised when creating an organization with a slug that already exists."""
 
+
+class InvalidInputError(Exception):
+    """Raised when user or domain input fails validation constraints."""
+

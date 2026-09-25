@@ -20,6 +20,7 @@ class UserContextValidator:
     def __init__(self) -> None:
         pass
 
+
     def require_authenticated_user(self, user: CurrentUser | None) -> CurrentUser:
         """
         Verify that a caller context is authenticated.
@@ -29,6 +30,7 @@ class UserContextValidator:
             log.warning("[require_authenticated_user] Access denied: unauthenticated caller context")
             raise AuthenticationRequiredError(SecurityMessage.AUTHENTICATION_REQUIRED)
         return user
+
 
     def require_org_member(self, user: CurrentUser | None) -> CurrentUser:
         """
@@ -40,6 +42,7 @@ class UserContextValidator:
             log.warning("[require_org_member] Access denied: user_id=%s missing organization membership", current_user.id)
             raise OrganizationRequiredError(SecurityMessage.ORGANIZATION_MEMBERSHIP_REQUIRED)
         return current_user
+
 
     def require_org_admin(self, user: CurrentUser | None) -> CurrentUser:
         """

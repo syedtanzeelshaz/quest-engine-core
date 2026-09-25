@@ -3,7 +3,9 @@ from datetime import date, datetime
 
 import strawberry
 
-from app.graphql.user import enums  # noqa: F401 - ensures GraphQL enum registration
+from app.core.enums import CountryCode, Gender
+from app.graphql.common import enums as common_enums  # noqa: F401 - ensures GraphQL enum registration
+from app.graphql.user import enums as user_enums  # noqa: F401 - ensures GraphQL enum registration
 from app.model.identity.app_user import AppUserStatus
 
 
@@ -14,8 +16,8 @@ class UserType:
     first_name: str | None = None
     last_name: str | None = None
     phone: str | None = None
-    country: str | None = None
-    gender: str | None = None
+    country: CountryCode | None = None
+    gender: Gender | None = None
     date_of_birth: date | None = None
     status: AppUserStatus | None = None
     created_at: datetime | None = None
