@@ -1,3 +1,88 @@
+type Query {
+  """Retrieve profile details for the currently authenticated user."""
+  currentUser: User!
+
+  """
+  Retrieve organization details by id, slug, or default to caller's active organization.
+  """
+  organization(id: ID = null, slug: String = null): Organization!
+
+  """Health and connectivity check for GraphQL API."""
+  ping: String!
+}
+
+type Mutation {
+  """Update profile details for the currently authenticated user."""
+  updateUserProfile(input: UpdateUserProfileInput!): User!
+
+  """Create a new tenant organization and assign caller as super admin."""
+  createOrganization(input: CreateOrganizationInput!): Organization!
+
+  """Update organization details (requires organization admin privileges)."""
+  updateOrganization(id: ID!, input: UpdateOrganizationInput!): Organization!
+
+  """Placeholder mutation until all domain mutators are registered."""
+  ping: String!
+}
+
+"""Input payload for creating a new tenant organization."""
+input CreateOrganizationInput {
+  name: String!
+  slug: String!
+  description: String = null
+}
+
+"""Input payload for updating organization details."""
+input UpdateOrganizationInput {
+  name: String = null
+  description: String = null
+}
+
+"""Input payload for updating the authenticated user's profile."""
+input UpdateUserProfileInput {
+  firstName: String = null
+  lastName: String = null
+  phone: String = null
+  country: CountryCode = null
+  gender: Gender = null
+  dateOfBirth: Date = null
+}
+
+"""Tenant organization representation."""
+type Organization {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String
+  status: OrgStatus
+  createdAt: DateTime
+  updatedAt: DateTime
+
+  """Active members belonging to this organization."""
+  users: [User!]!
+}
+
+"""Application user representation."""
+type User {
+  id: ID!
+  email: String!
+  firstName: String
+  lastName: String
+  phone: String
+  country: CountryCode
+  gender: Gender
+  dateOfBirth: Date
+  status: AppUserStatus
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+"""Date (isoformat)"""
+scalar Date
+
+"""Date with time (isoformat)"""
+scalar DateTime
+
 """Account lifecycle status for an application user."""
 enum AppUserStatus {
   ACTIVE
@@ -258,19 +343,6 @@ enum CountryCode {
   ZWE
 }
 
-"""Input payload for creating a new tenant organization."""
-input CreateOrganizationInput {
-  name: String!
-  slug: String!
-  description: String = null
-}
-
-"""Date (isoformat)"""
-scalar Date
-
-"""Date with time (isoformat)"""
-scalar DateTime
-
 """User gender identity options."""
 enum Gender {
   MALE
@@ -279,82 +351,10 @@ enum Gender {
   PREFER_NOT_TO_SAY
 }
 
-type Mutation {
-  """Update profile details for the currently authenticated user."""
-  updateUserProfile(input: UpdateUserProfileInput!): User!
-
-  """Create a new tenant organization and assign caller as super admin."""
-  createOrganization(input: CreateOrganizationInput!): Organization!
-
-  """Update organization details (requires organization admin privileges)."""
-  updateOrganization(id: ID!, input: UpdateOrganizationInput!): Organization!
-
-  """Placeholder mutation until all domain mutators are registered."""
-  ping: String!
-}
-
 """Tenant organization lifecycle status."""
 enum OrgStatus {
   ACTIVE
   DELETED
   DRAFT
   INACTIVE
-}
-
-"""Tenant organization representation."""
-type Organization {
-  id: ID!
-  name: String!
-  slug: String!
-  description: String
-  status: OrgStatus
-  createdAt: DateTime
-  updatedAt: DateTime
-
-  """Active members belonging to this organization."""
-  users: [User!]!
-}
-
-type Query {
-  """Retrieve profile details for the currently authenticated user."""
-  currentUser: User!
-
-  """
-  Retrieve organization details by id, slug, or default to caller's active organization.
-  """
-  organization(id: ID = null, slug: String = null): Organization!
-
-  """Health and connectivity check for GraphQL API."""
-  ping: String!
-}
-
-"""Input payload for updating organization details."""
-input UpdateOrganizationInput {
-  name: String = null
-  description: String = null
-}
-
-"""Input payload for updating the authenticated user's profile."""
-input UpdateUserProfileInput {
-  firstName: String = null
-  lastName: String = null
-  phone: String = null
-  country: CountryCode = null
-  gender: Gender = null
-  dateOfBirth: Date = null
-}
-
-"""Application user representation."""
-type User {
-  id: ID!
-  email: String!
-  firstName: String
-  lastName: String
-  phone: String
-  country: CountryCode
-  gender: Gender
-  dateOfBirth: Date
-  status: AppUserStatus
-  createdAt: DateTime
-  updatedAt: DateTime
 }
