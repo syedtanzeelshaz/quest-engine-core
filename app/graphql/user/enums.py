@@ -3,7 +3,7 @@ import strawberry
 
 from app.model.identity.app_user import AppUserStatus
 
-strawberry.enum(
+AppUserStatus = strawberry.enum(
     AppUserStatus,
     name="AppUserStatus",
     description="Account lifecycle status for an application user.",

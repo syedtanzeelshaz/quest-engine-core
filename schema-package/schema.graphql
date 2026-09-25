@@ -6,6 +6,258 @@ enum AppUserStatus {
   SUSPENDED
 }
 
+"""ISO 3166-1 alpha-3 three-letter country codes."""
+enum CountryCode {
+  ABW
+  AFG
+  AGO
+  AIA
+  ALB
+  AND
+  ARE
+  ARG
+  ARM
+  ASM
+  ATA
+  ATF
+  ATG
+  AUS
+  AUT
+  AZE
+  BDI
+  BEL
+  BEN
+  BES
+  BFA
+  BGD
+  BGR
+  BHR
+  BHS
+  BIH
+  BLM
+  BLR
+  BLZ
+  BMU
+  BOL
+  BRA
+  BRB
+  BRN
+  BTN
+  BVT
+  BWA
+  CAF
+  CAN
+  CCK
+  CHE
+  CHL
+  CHN
+  CIV
+  CMR
+  COD
+  COG
+  COK
+  COL
+  COM
+  CPV
+  CRI
+  CUB
+  CUW
+  CXR
+  CYM
+  CYP
+  CZE
+  DEU
+  DJI
+  DMA
+  DNK
+  DOM
+  DZA
+  ECU
+  EGY
+  ERI
+  ESH
+  ESP
+  EST
+  ETH
+  FIN
+  FJI
+  FLK
+  FRA
+  FRO
+  FSM
+  GAB
+  GBR
+  GEO
+  GGY
+  GHA
+  GIB
+  GIN
+  GLP
+  GMB
+  GNB
+  GNQ
+  GRC
+  GRD
+  GRL
+  GTM
+  GUF
+  GUM
+  GUY
+  HKG
+  HMD
+  HND
+  HRV
+  HTI
+  HUN
+  IDN
+  IMN
+  IND
+  IOT
+  IRL
+  IRN
+  IRQ
+  ISL
+  ISR
+  ITA
+  JAM
+  JEY
+  JOR
+  JPN
+  KAZ
+  KEN
+  KGZ
+  KHM
+  KIR
+  KNA
+  KOR
+  KWT
+  LAO
+  LBN
+  LBR
+  LBY
+  LCA
+  LIE
+  LKA
+  LSO
+  LTU
+  LUX
+  LVA
+  MAC
+  MAF
+  MAR
+  MCO
+  MDA
+  MDG
+  MDV
+  MEX
+  MHL
+  MKD
+  MLI
+  MLT
+  MMR
+  MNE
+  MNG
+  MNP
+  MOZ
+  MRT
+  MSR
+  MTQ
+  MUS
+  MWI
+  MYS
+  MYT
+  NAM
+  NCL
+  NER
+  NFK
+  NGA
+  NIC
+  NIU
+  NLD
+  NOR
+  NPL
+  NRU
+  NZL
+  OMN
+  PAK
+  PAN
+  PCN
+  PER
+  PHL
+  PLW
+  PNG
+  POL
+  PRI
+  PRK
+  PRT
+  PRY
+  PSE
+  PYF
+  QAT
+  REU
+  ROU
+  RUS
+  RWA
+  SAU
+  SDN
+  SEN
+  SGP
+  SGS
+  SHN
+  SJM
+  SLB
+  SLE
+  SLV
+  SMR
+  SOM
+  SPM
+  SRB
+  SSD
+  STP
+  SUR
+  SVK
+  SVN
+  SWE
+  SWZ
+  SXM
+  SYC
+  SYR
+  TCA
+  TCD
+  TGO
+  THA
+  TJK
+  TKL
+  TKM
+  TLS
+  TON
+  TTO
+  TUN
+  TUR
+  TUV
+  TWN
+  TZA
+  UGA
+  UKR
+  UMI
+  URY
+  USA
+  UZB
+  VAT
+  VCT
+  VEN
+  VGB
+  VIR
+  VNM
+  VUT
+  WLF
+  WSM
+  YEM
+  ZAF
+  ZMB
+  ZWE
+}
+
 """Input payload for creating a new tenant organization."""
 input CreateOrganizationInput {
   name: String!
@@ -18,6 +270,14 @@ scalar Date
 
 """Date with time (isoformat)"""
 scalar DateTime
+
+"""User gender identity options."""
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
 
 type Mutation {
   """Update profile details for the currently authenticated user."""
@@ -79,8 +339,8 @@ input UpdateUserProfileInput {
   firstName: String = null
   lastName: String = null
   phone: String = null
-  country: String = null
-  gender: String = null
+  country: CountryCode = null
+  gender: Gender = null
   dateOfBirth: Date = null
 }
 
@@ -91,8 +351,8 @@ type User {
   firstName: String
   lastName: String
   phone: String
-  country: String
-  gender: String
+  country: CountryCode
+  gender: Gender
   dateOfBirth: Date
   status: AppUserStatus
   createdAt: DateTime

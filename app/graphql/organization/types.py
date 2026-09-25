@@ -4,9 +4,8 @@ from datetime import datetime
 import strawberry
 from strawberry.types import Info
 
-from app.graphql.organization import enums  # noqa: F401 - ensures GraphQL enum registration
+from app.graphql.organization.enums import OrgStatus
 from app.graphql.user.types import UserType
-from app.model.identity.organization import OrgStatus
 
 
 @strawberry.type(name="Organization", description="Tenant organization representation.")

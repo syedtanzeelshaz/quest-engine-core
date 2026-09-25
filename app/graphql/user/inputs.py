@@ -3,7 +3,7 @@ from datetime import date
 
 import strawberry
 
-from app.core.enums import CountryCode, Gender
+from app.graphql.common.enums import CountryCode, Gender
 
 
 @strawberry.input(description="Input payload for updating the authenticated user's profile.")
