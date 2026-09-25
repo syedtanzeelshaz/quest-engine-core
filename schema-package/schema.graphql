@@ -1,9 +1,54 @@
+"""Date (isoformat)"""
+scalar Date
+
+"""Date with time (isoformat)"""
+scalar DateTime
+
 type Mutation {
-  """Placeholder mutation until domain mutators are registered."""
+  """Update profile details for the currently authenticated user."""
+  updateUserProfile(input: UpdateUserProfileInput!): User!
+
+  """Placeholder mutation until all domain mutators are registered."""
   ping: String!
 }
 
 type Query {
+  """Retrieve profile details for the currently authenticated user."""
+  currentUser: User!
+
   """Health and connectivity check for GraphQL API."""
   ping: String!
+}
+
+"""Input payload for updating the authenticated user's profile."""
+input UpdateUserProfileInput {
+  firstName: String = null
+  lastName: String = null
+  phone: String = null
+  country: String = null
+  gender: String = null
+  dateOfBirth: Date = null
+}
+
+"""Application user representation."""
+type User {
+  id: ID!
+  email: String!
+  firstName: String
+  lastName: String
+  phone: String
+  country: String
+  gender: String
+  dateOfBirth: Date
+  status: UserStatus
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+"""Account lifecycle status for an application user."""
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  DELETED
 }

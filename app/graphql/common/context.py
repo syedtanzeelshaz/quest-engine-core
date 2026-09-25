@@ -9,25 +9,30 @@ from dataclasses import dataclass, field
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
+from strawberry.dataloader import DataLoader
 from strawberry.fastapi import BaseContext
 
 from app.api.constants import AUTH_TOKEN_URL
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.exceptions import InvalidTokenError
+from app.graphql.user.loaders import create_user_loader
+from app.graphql.user.types import UserType
 from app.model.identity.app_user import AppUserStatus
 from app.repository.identity.app_user_repo import AppUserRepository
 from app.repository.identity.organization_member_repo import (
     OrganizationMemberRepository,
 )
-from app.service.authentication.models import CurrentUser
 from app.service.authentication.token import TokenService
+from app.service.user import CurrentUser, UserContextValidator
+from app.util.logger import log
 
 oauth2_scheme_optional = OAuth2PasswordBearer(
     tokenUrl=AUTH_TOKEN_URL,
     auto_error=False,
 )
 _token_service = TokenService(settings)
+_user_context_validator = UserContextValidator()
 
 
 @dataclass
@@ -37,17 +42,44 @@ class RequestLoaders:
 
     Instantiated once per GraphQL request in get_graphql_context to batch queries
     across nested resolvers and prevent cross-request cache leaks.
-    Domain-specific loaders will be attached here as domains are introduced.
     """
-    pass
+    user_by_id: DataLoader[int, UserType | None]
+
+    @classmethod
+    def create(cls, db: AsyncSession) -> "RequestLoaders":
+        return cls(
+            user_by_id=create_user_loader(db),
+        )
 
 
 @dataclass
 class GraphQLContext(BaseContext):
     """Context object available to every Strawberry resolver via info.context."""
     db: AsyncSession
+    loaders: RequestLoaders
     current_user: CurrentUser | None = None
-    loaders: RequestLoaders = field(default_factory=RequestLoaders)
+
+    def require_user(self) -> CurrentUser:
+        """
+        Return the authenticated CurrentUser.
+        Raises AuthenticationRequiredError if caller is not authenticated.
+        """
+        return _user_context_validator.require_authenticated_user(self.current_user)
+
+    def require_org_member(self) -> CurrentUser:
+        """
+        Return the authenticated CurrentUser with active organization membership.
+        Raises OrganizationRequiredError if caller does not belong to an organization.
+        """
+        return _user_context_validator.require_org_member(self.current_user)
+
+    def require_org_admin(self) -> CurrentUser:
+        """
+        Return the authenticated CurrentUser with administrator privileges.
+        Raises AccessDeniedError if caller lacks admin roles.
+        """
+        return _user_context_validator.require_org_admin(self.current_user)
+
 
 
 async def get_optional_current_user(
@@ -64,16 +96,21 @@ async def get_optional_current_user(
     try:
         user_id = _token_service.verify_access_token(token)
     except InvalidTokenError:
+        log.warning("[GraphQLContext] Token verification failed: invalid or expired access token")
         return None
 
-    user = await AppUserRepository(db).find_by_id(user_id)
+    user_repo = AppUserRepository(db)
+    user = await user_repo.find_by_id(user_id)
     if user is None or user.status != AppUserStatus.ACTIVE:
+        log.warning("[GraphQLContext] Caller resolution failed: user_id=%s not found or inactive", user_id)
         return None
 
     org_member_repo = OrganizationMemberRepository(db)
     memberships = await org_member_repo.find_all_active_by_user(user.id)
     org_id = memberships[0].org_id if memberships else None
     roles = await org_member_repo.find_roles_by_user(user.id)
+
+    log.info("[GraphQLContext] Resolved authenticated caller: user_id=%s, org_id=%s", user.id, org_id)
 
     return CurrentUser(
         id=user.id,
@@ -93,5 +130,5 @@ async def get_graphql_context(
     return GraphQLContext(
         db=db,
         current_user=current_user,
-        loaders=RequestLoaders(),
+        loaders=RequestLoaders.create(db),
     )

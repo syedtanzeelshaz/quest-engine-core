@@ -29,3 +29,20 @@ class InvalidTokenError(Exception):
 
 class InvalidRefreshTokenError(InvalidTokenError):
     """Raised when a refresh token is invalid, expired, or already revoked."""
+
+
+class UserNotFoundError(Exception):
+    """Raised when a user is not found by ID or other identifier."""
+
+
+class AuthenticationRequiredError(Exception):
+    """Raised when an operation requires an authenticated user."""
+
+
+class OrganizationRequiredError(Exception):
+    """Raised when an operation requires active organization membership."""
+
+
+class AccessDeniedError(Exception):
+    """Raised when a user lacks required permissions or roles."""
+

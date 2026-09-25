@@ -4,19 +4,12 @@ GraphQL permission classes.
 Evaluated by Strawberry on field and mutation resolvers before execution.
 Failures return structured GraphQL errors without failing HTTP status.
 """
-from enum import StrEnum
-
 from strawberry.permission import BasePermission
 from strawberry.types import Info
 
 from app.graphql.common.constants import GraphQLMessage
 from app.graphql.common.context import GraphQLContext
-
-
-class AdminRole(StrEnum):
-    """Administrator roles capable of managing organization-scoped resources."""
-    SUPER_ADMIN = "SUPER_ADMIN"
-    ADMIN = "ADMIN"
+from app.service.user.models import AdminRole
 
 
 class IsAuthenticated(BasePermission):

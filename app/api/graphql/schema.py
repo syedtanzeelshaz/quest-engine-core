@@ -5,17 +5,20 @@ Aggregates all domain DataFetchers into Query and all domain DataMutators into M
 """
 import strawberry
 
+from app.api.graphql.user.user_data_fetcher import UserDataFetcher
+from app.api.graphql.user.user_data_mutator import UserDataMutator
+
 
 @strawberry.type
-class Query:
+class Query(UserDataFetcher):
     @strawberry.field(description="Health and connectivity check for GraphQL API.")
     def ping(self) -> str:
         return "pong"
 
 
 @strawberry.type
-class Mutation:
-    @strawberry.mutation(description="Placeholder mutation until domain mutators are registered.")
+class Mutation(UserDataMutator):
+    @strawberry.mutation(description="Placeholder mutation until all domain mutators are registered.")
     def ping(self) -> str:
         return "pong"
 
