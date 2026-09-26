@@ -2,13 +2,13 @@ from app.model.tenant.agent import Agent, AgentAud, AgentStatus
 from app.model.tenant.agent_access_policy import AgentAccessPolicy, AgentAccessPolicyAud
 from app.model.tenant.agent_datasource import AgentDatasource, AgentDatasourceAud
 from app.model.tenant.datasource import (
-    DATASOURCE_TYPES_BY_CATEGORY,
+    DATASOURCE_KINDS_BY_CATEGORY,
     Datasource,
     DatasourceApprovalStatus,
     DatasourceAud,
     DatasourceCategory,
+    DatasourceKind,
     DatasourceStatus,
-    DatasourceType,
 )
 from app.model.tenant.datasource_data_policy import (
     DatasourceDataPolicy,
@@ -22,7 +22,7 @@ from app.model.tenant.datasource_schema_object import (
 from app.model.tenant.revinfo import TenantRevInfo
 
 __all__ = [
-    "DATASOURCE_TYPES_BY_CATEGORY",
+    "DATASOURCE_KINDS_BY_CATEGORY",
     "Agent",
     "AgentAccessPolicy",
     "AgentAccessPolicyAud",
@@ -36,10 +36,10 @@ __all__ = [
     "DatasourceCategory",
     "DatasourceDataPolicy",
     "DatasourceDataPolicyAud",
+    "DatasourceKind",
     "DatasourceSchemaObject",
     "DatasourceSchemaObjectAud",
     "DatasourceStatus",
-    "DatasourceType",
     "SchemaObjectType",
     "TenantRevInfo",
 ]

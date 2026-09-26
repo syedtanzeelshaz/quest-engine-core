@@ -29,7 +29,7 @@ class DatasourceCategory(StrEnum):
     FILE = "FILE"
 
 
-class DatasourceType(StrEnum):
+class DatasourceKind(StrEnum):
     MONGODB = "MONGODB"
     MYSQL = "MYSQL"
     NOTION = "NOTION"
@@ -69,7 +69,7 @@ class DatasourceAud(Base):
     org_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     category: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    type: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    kind: Mapped[str | None] = mapped_column(String(50), nullable=True)
     connection_config: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     approval_status: Mapped[str | None] = mapped_column(String(50), nullable=True)
     status: Mapped[str | None] = mapped_column(String(50), nullable=True)
@@ -106,8 +106,8 @@ class Datasource(Base, AuditMetadataMixin):
         SQLEnum(DatasourceCategory, native_enum=False, length=50),
         nullable=False,
     )
-    type: Mapped[DatasourceType] = mapped_column(
-        SQLEnum(DatasourceType, native_enum=False, length=50),
+    kind: Mapped[DatasourceKind] = mapped_column(
+        SQLEnum(DatasourceKind, native_enum=False, length=50),
         nullable=False,
     )
     connection_config: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
@@ -127,16 +127,16 @@ class Datasource(Base, AuditMetadataMixin):
     reviewed_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
 
 
-DATASOURCE_TYPES_BY_CATEGORY: dict[DatasourceCategory, set[DatasourceType]] = {
+DATASOURCE_KINDS_BY_CATEGORY: dict[DatasourceCategory, set[DatasourceKind]] = {
     DatasourceCategory.DATABASE: {
-        DatasourceType.MONGODB,
-        DatasourceType.MYSQL,
-        DatasourceType.POSTGRESQL,
+        DatasourceKind.MONGODB,
+        DatasourceKind.MYSQL,
+        DatasourceKind.POSTGRESQL,
     },
     DatasourceCategory.DOCUMENT: {
-        DatasourceType.NOTION,
+        DatasourceKind.NOTION,
     },
     DatasourceCategory.FILE: {
-        DatasourceType.PDF,
+        DatasourceKind.PDF,
     },
 }

@@ -18,7 +18,7 @@ from app.model.identity import (
     RoleAud,
 )
 from app.model.tenant import (
-    DATASOURCE_TYPES_BY_CATEGORY,
+    DATASOURCE_KINDS_BY_CATEGORY,
     Agent,
     AgentAccessPolicy,
     AgentAccessPolicyAud,
@@ -32,10 +32,10 @@ from app.model.tenant import (
     DatasourceCategory,
     DatasourceDataPolicy,
     DatasourceDataPolicyAud,
+    DatasourceKind,
     DatasourceSchemaObject,
     DatasourceSchemaObjectAud,
     DatasourceStatus,
-    DatasourceType,
     SchemaObjectType,
     TenantRevInfo,
 )
@@ -78,9 +78,9 @@ __all__ = [
     "AgentStatus",
     "DatasourceApprovalStatus",
     "DatasourceCategory",
+    "DatasourceKind",
     "DatasourceStatus",
-    "DatasourceType",
     "SchemaObjectType",
     # Constants
-    "DATASOURCE_TYPES_BY_CATEGORY",
+    "DATASOURCE_KINDS_BY_CATEGORY",
 ]
