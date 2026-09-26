@@ -25,29 +25,6 @@ type Mutation {
   ping: String!
 }
 
-"""Input payload for creating a new tenant organization."""
-input CreateOrganizationInput {
-  name: String!
-  slug: String!
-  description: String = null
-}
-
-"""Input payload for updating organization details."""
-input UpdateOrganizationInput {
-  name: String = null
-  description: String = null
-}
-
-"""Input payload for updating the authenticated user's profile."""
-input UpdateUserProfileInput {
-  firstName: String = null
-  lastName: String = null
-  phone: String = null
-  country: CountryCode = null
-  gender: Gender = null
-  dateOfBirth: Date = null
-}
-
 """Tenant organization representation."""
 type Organization {
   id: ID!
@@ -75,6 +52,29 @@ type User {
   status: AppUserStatus
   createdAt: DateTime
   updatedAt: DateTime
+}
+
+"""Input payload for creating a new tenant organization."""
+input CreateOrganizationInput {
+  name: String!
+  slug: String!
+  description: String = null
+}
+
+"""Input payload for updating organization details."""
+input UpdateOrganizationInput {
+  name: String = null
+  description: String = null
+}
+
+"""Input payload for updating the authenticated user's profile."""
+input UpdateUserProfileInput {
+  firstName: String = null
+  lastName: String = null
+  phone: String = null
+  country: CountryCode = null
+  gender: Gender = null
+  dateOfBirth: Date = null
 }
 
 """Date (isoformat)"""

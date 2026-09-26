@@ -54,16 +54,16 @@ def _graphql_type_sort_key(type_: GraphQLNamedType) -> tuple[int, str]:
     if isinstance(type_, GraphQLObjectType) and name == "Subscription":
         return (2, name)
 
-    # 4. Input types (CreateOrganizationInput, UpdateUserProfileInput, etc.)
-    if isinstance(type_, GraphQLInputObjectType):
+    # 4. Object types (Organization, User, etc.)
+    if isinstance(type_, GraphQLObjectType):
         return (3, name)
 
-    # 5. Object types (Organization, User, etc.)
-    if isinstance(type_, GraphQLObjectType):
+    # 5. Interfaces and Unions
+    if isinstance(type_, (GraphQLInterfaceType, GraphQLUnionType)):
         return (4, name)
 
-    # 6. Interfaces and Unions
-    if isinstance(type_, (GraphQLInterfaceType, GraphQLUnionType)):
+    # 6. Input types (CreateOrganizationInput, UpdateUserProfileInput, etc.)
+    if isinstance(type_, GraphQLInputObjectType):
         return (5, name)
 
     # 7. Custom Scalars (Date, DateTime, etc.)
@@ -80,7 +80,7 @@ def _graphql_type_sort_key(type_: GraphQLNamedType) -> tuple[int, str]:
 def print_schema_ordered(schema_instance: Schema) -> str:
     """
     Print the Strawberry schema preserving native formatting while logically ordering types:
-    Query -> Mutation -> Inputs -> Types -> Interfaces/Unions -> Scalars -> Enums.
+    Query -> Mutation -> Types -> Interfaces/Unions -> Inputs -> Scalars -> Enums.
     """
     graphql_core_schema = cast("GraphQLSchema", schema_instance._schema)
     extras = PrintExtras()
