@@ -19,7 +19,7 @@ class OrganizationDataFetcher:
     """Organization domain query operations."""
 
     @strawberry.field(
-        description="Retrieve organization details by id, slug, or default to caller's active organization.",
+        description="Retrieve organization details by id or slug.",
         permission_classes=[IsAuthenticated],
     )
     async def organization(
@@ -30,6 +30,10 @@ class OrganizationDataFetcher:
     ) -> OrganizationType:
         current_user = info.context.require_user()
         log.info("[organization] Fetching organization query (id=%s, slug=%s) by caller user_id=%s", id, slug, current_user.id)
+
+        if id is None and slug is None:
+            log.warning("[organization] Neither id nor slug provided by user_id=%s", current_user.id)
+            raise Exception(OrganizationMessage.IDENTIFIER_REQUIRED)
 
         org_repo = OrganizationRepository(info.context.db)
         org_query_service = OrganizationQueryService(org_repo=org_repo)
@@ -43,9 +47,6 @@ class OrganizationDataFetcher:
                 raise Exception(OrganizationMessage.ORGANIZATION_NOT_FOUND)
         elif slug is not None:
             org = await org_query_service.get_by_slug(slug)
-        else:
-            current_user = info.context.require_org_member()
-            org = await org_query_service.get_by_id(current_user.org_id)
 
         if org is None:
             log.warning("[organization] Organization not found (id=%s, slug=%s)", id, slug)

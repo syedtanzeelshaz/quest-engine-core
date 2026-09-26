@@ -2,9 +2,7 @@ type Query {
   """Retrieve profile details for the currently authenticated user."""
   currentUser: User!
 
-  """
-  Retrieve organization details by id, slug, or default to caller's active organization.
-  """
+  """Retrieve organization details by id or slug."""
   organization(id: ID = null, slug: String = null): Organization!
 
   """Health and connectivity check for GraphQL API."""

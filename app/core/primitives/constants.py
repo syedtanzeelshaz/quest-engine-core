@@ -22,3 +22,4 @@ class OrganizationMessage:
 
     ORGANIZATION_NOT_FOUND = "Organization not found."
     SLUG_ALREADY_EXISTS = "Slug already exists."
+    IDENTIFIER_REQUIRED = "Either 'id' or 'slug' must be provided."
