@@ -1,9 +1,7 @@
-from collections.abc import Sequence
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.model.identity.app_user import AppUser, AppUserStatus
+from app.model.identity.app_user import AppUser
 from app.repository.base import BaseRepository
 
 
@@ -23,13 +21,3 @@ class AppUserRepository(BaseRepository[AppUser]):
         stmt = select(1).select_from(AppUser).where(AppUser.email == email).limit(1)
         return (await self.session.scalar(stmt)) is not None
 
-    async def find_all_by_status_in(
-        self,
-        statuses: Sequence[AppUserStatus],
-    ) -> list[AppUser]:
-        """Fetch users whose status is within the specified collection."""
-        if not statuses:
-            return []
-        stmt = select(AppUser).where(AppUser.status.in_(statuses))
-        res = await self.session.scalars(stmt)
-        return list(res.all())

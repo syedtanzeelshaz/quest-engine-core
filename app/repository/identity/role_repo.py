@@ -16,7 +16,3 @@ class RoleRepository(BaseRepository[Role]):
         stmt = select(Role).where(Role.name == name).limit(1)
         return await self.session.scalar(stmt)
 
-    async def exists_by_name(self, name: str) -> bool:
-        """Check whether a role with the given name exists."""
-        stmt = select(1).select_from(Role).where(Role.name == name).limit(1)
-        return (await self.session.scalar(stmt)) is not None

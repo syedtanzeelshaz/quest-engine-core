@@ -12,19 +12,6 @@ class OrganizationMemberRepository(BaseRepository[OrganizationMember]):
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(OrganizationMember, session)
 
-    async def find_all_by_user_and_org(
-        self,
-        user_id: int,
-        org_id: int,
-    ) -> list[OrganizationMember]:
-        """Fetch all membership records for a specific user and organization."""
-        stmt = select(OrganizationMember).where(
-            OrganizationMember.user_id == user_id,
-            OrganizationMember.org_id == org_id,
-        )
-        res = await self.session.scalars(stmt)
-        return list(res.all())
-
     async def find_all_active_by_user(self, user_id: int) -> list[OrganizationMember]:
         """Fetch all active organization memberships for a user."""
         stmt = select(OrganizationMember).where(
@@ -34,11 +21,6 @@ class OrganizationMemberRepository(BaseRepository[OrganizationMember]):
         res = await self.session.scalars(stmt)
         return list(res.all())
 
-    async def find_all_by_org(self, org_id: int) -> list[OrganizationMember]:
-        """Fetch all member records for an organization."""
-        stmt = select(OrganizationMember).where(OrganizationMember.org_id == org_id)
-        res = await self.session.scalars(stmt)
-        return list(res.all())
 
     async def find_roles_by_user(self, user_id: int) -> list[str]:
         """Fetch unique active role names assigned to a user across organizations."""

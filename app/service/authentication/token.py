@@ -106,13 +106,6 @@ class TokenService:
         """
         return self._decode_and_validate(token, expected_type=_REFRESH_TOKEN_TYPE)
 
-    def decode_token(self, token: str) -> dict:
-        """Decode and return the full raw JWT payload."""
-        try:
-            return jwt.decode(token, self._secret, algorithms=[self._algorithm])
-        except JWTError:
-            raise InvalidTokenError("Token is invalid or expired.")
-
     def refresh_token_expires_at(self) -> datetime:
         """Return the absolute expiry datetime for a newly issued refresh token."""
         return datetime.now(UTC) + timedelta(days=self._refresh_expire_days)

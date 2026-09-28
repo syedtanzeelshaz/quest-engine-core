@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.model.identity.app_user import AppUser
-from app.model.identity.organization import Organization, OrgStatus
+from app.model.identity.organization import Organization
 from app.model.identity.organization_member import (
     OrganizationMember,
     OrgMemberStatus,
@@ -32,17 +32,6 @@ class OrganizationRepository(BaseRepository[Organization]):
             .limit(1)
         )
         return (await self.session.scalar(stmt)) is not None
-
-    async def find_all_by_status_in(
-        self,
-        statuses: Sequence[OrgStatus],
-    ) -> list[Organization]:
-        """Fetch organizations matching a sequence of statuses."""
-        if not statuses:
-            return []
-        stmt = select(Organization).where(Organization.status.in_(statuses))
-        res = await self.session.scalars(stmt)
-        return list(res.all())
 
     async def find_active_users_by_org_ids(
         self,
