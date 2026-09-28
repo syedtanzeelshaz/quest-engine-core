@@ -16,6 +16,11 @@ from app.api.constants import AUTH_TOKEN_URL
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.primitives.exceptions import InvalidTokenError
+from app.graphql.datasource.loaders import (
+    create_datasource_loader,
+    create_org_datasources_loader,
+)
+from app.graphql.datasource.types import DatasourceType
 from app.graphql.organization.loaders import (
     create_org_users_loader,
     create_organization_loader,
@@ -51,6 +56,8 @@ class RequestLoaders:
     user_by_id: DataLoader[int, UserType | None]
     org_by_id: DataLoader[int, OrganizationType | None]
     users_by_org_id: DataLoader[int, list[UserType]]
+    datasource_by_id: DataLoader[int, DatasourceType | None]
+    datasources_by_org_id: DataLoader[int, list[DatasourceType]]
 
     @classmethod
     def create(cls, db: AsyncSession) -> "RequestLoaders":
@@ -58,7 +65,10 @@ class RequestLoaders:
             user_by_id=create_user_loader(db),
             org_by_id=create_organization_loader(db),
             users_by_org_id=create_org_users_loader(db),
+            datasource_by_id=create_datasource_loader(db),
+            datasources_by_org_id=create_org_datasources_loader(db),
         )
+
 
 
 @dataclass

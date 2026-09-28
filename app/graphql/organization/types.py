@@ -4,6 +4,7 @@ from datetime import datetime
 import strawberry
 from strawberry.types import Info
 
+from app.graphql.datasource.types import DatasourceType
 from app.graphql.organization.enums import OrgStatus
 from app.graphql.user.types import UserType
 
@@ -21,3 +22,8 @@ class OrganizationType:
     @strawberry.field(description="Active members belonging to this organization.")
     async def users(self, info: Info) -> list[UserType]:
         return await info.context.loaders.users_by_org_id.load(int(self.id))
+
+    @strawberry.field(description="Datasources connected to this organization.")
+    async def datasources(self, info: Info) -> list[DatasourceType]:
+        return await info.context.loaders.datasources_by_org_id.load(int(self.id))
+
