@@ -23,6 +23,21 @@ type Mutation {
   ping: String!
 }
 
+"""Datasource entity representation."""
+type Datasource {
+  id: ID!
+  orgId: ID!
+  name: String!
+  category: DatasourceCategory!
+  kind: DatasourceKind!
+  approvalStatus: DatasourceApprovalStatus
+  status: DatasourceStatus
+  reviewedBy: ID
+  reviewedAt: DateTime
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
 """Tenant organization representation."""
 type Organization {
   id: ID!
@@ -35,6 +50,9 @@ type Organization {
 
   """Active members belonging to this organization."""
   users: [User!]!
+
+  """Datasources connected to this organization."""
+  datasources: [Datasource!]!
 }
 
 """Application user representation."""
@@ -339,6 +357,41 @@ enum CountryCode {
   ZAF
   ZMB
   ZWE
+}
+
+"""Administrative approval state of the datasource."""
+enum DatasourceApprovalStatus {
+  APPROVED
+  DRAFT
+  PENDING
+  REJECTED
+  REVOKED
+}
+
+"""Broad high-level category of the data source."""
+enum DatasourceCategory {
+  DATABASE
+  DOCUMENT
+  FILE
+}
+
+"""Specific database engine or document platform kind."""
+enum DatasourceKind {
+  MONGODB
+  MYSQL
+  NOTION
+  PDF
+  POSTGRESQL
+}
+
+"""Operational connection and lifecycle status of the datasource."""
+enum DatasourceStatus {
+  ACTIVE
+  CONNECTION_FAILED
+  DELETED
+  DRAFT
+  INACTIVE
+  METADATA_DISCOVERY_FAILED
 }
 
 """User gender identity options."""
