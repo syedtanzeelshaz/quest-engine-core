@@ -23,3 +23,10 @@ class OrganizationMessage:
     ORGANIZATION_NOT_FOUND = "Organization not found."
     SLUG_ALREADY_EXISTS = "Slug already exists."
     IDENTIFIER_REQUIRED = "Either 'id' or 'slug' must be provided."
+
+
+class DatasourceMessage:
+    """Datasource domain messages."""
+
+    DATASOURCE_NOT_FOUND = "Datasource not found."
+

@@ -5,6 +5,9 @@ Aggregates all domain DataFetchers into Query and all domain DataMutators into M
 """
 import strawberry
 
+from app.api.graphql.datasource.datasource_data_fetcher import (
+    DatasourceDataFetcher,
+)
 from app.api.graphql.organization.organization_data_fetcher import (
     OrganizationDataFetcher,
 )
@@ -19,6 +22,7 @@ from app.api.graphql.user.user_data_mutator import UserDataMutator
 class Query(
     UserDataFetcher,
     OrganizationDataFetcher,
+    DatasourceDataFetcher,
 ):
     @strawberry.field(description="Health and connectivity check for GraphQL API.")
     def ping(self) -> str:

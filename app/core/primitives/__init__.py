@@ -2,6 +2,7 @@
 Core domain primitives (enums, constants, and root exceptions).
 """
 from app.core.primitives.constants import (
+    DatasourceMessage,
     OrganizationMessage,
     SecurityMessage,
     UserMessage,
@@ -26,6 +27,7 @@ __all__ = [
     "AccessDeniedError",
     "AuthenticationRequiredError",
     "CountryCode",
+    "DatasourceMessage",
     "EmailAlreadyExistsError",
     "Gender",
     "InvalidCredentialsError",
@@ -41,3 +43,4 @@ __all__ = [
     "UserNotActiveError",
     "UserNotFoundError",
 ]
+

@@ -5,6 +5,12 @@ type Query {
   """Retrieve organization details by id or slug."""
   organization(id: ID = null, slug: String = null): Organization!
 
+  """Retrieve datasource details by id for the caller's organization."""
+  datasource(id: ID!): Datasource!
+
+  """Retrieve all datasources connected to the caller's organization."""
+  datasources: [Datasource!]!
+
   """Health and connectivity check for GraphQL API."""
   ping: String!
 }
