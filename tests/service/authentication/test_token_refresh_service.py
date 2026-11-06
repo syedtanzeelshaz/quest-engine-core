@@ -13,7 +13,7 @@ from app.repository.identity.organization_member_repo import (
 from app.repository.identity.refresh_token_repo import RefreshTokenRepository
 from app.service.authentication.models import AuthTokenPair
 from app.service.authentication.token import TokenService
-from app.service.authentication.token_refresh import TokenRefreshService
+from app.service.authentication.token_refresh_service import TokenRefreshService
 
 
 class TestTokenRefreshServiceRefresh:

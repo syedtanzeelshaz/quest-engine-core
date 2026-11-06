@@ -10,7 +10,7 @@ from app.repository.base import BaseRepository
 class DatasourceRepository(BaseRepository[Datasource]):
     """Data access repository for tenant.datasource."""
 
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(self, session: AsyncSession | None = None) -> None:
         super().__init__(Datasource, session)
 
     async def find_all_by_org(self, org_id: int) -> list[Datasource]:

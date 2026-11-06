@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.rest.constants.http_codes import HttpCode
 from app.api.rest.constants.http_messages import HttpMessage
-from app.api.rest.deps import get_current_user
-from app.core.config import settings
-from app.core.database import get_db
+from app.api.rest.deps import (
+    get_current_user,
+    get_login_service,
+    get_registration_service,
+    get_token_refresh_service,
+)
 from app.core.primitives.exceptions import (
     EmailAlreadyExistsError,
     InvalidCredentialsError,
@@ -13,11 +15,6 @@ from app.core.primitives.exceptions import (
     UserNotActiveError,
 )
 from app.model.identity.app_user import AppUser
-from app.repository.identity.app_user_repo import AppUserRepository
-from app.repository.identity.organization_member_repo import (
-    OrganizationMemberRepository,
-)
-from app.repository.identity.refresh_token_repo import RefreshTokenRepository
 from app.schema.authentication.auth import (
     LoginRequest,
     LogoutRequest,
@@ -26,18 +23,13 @@ from app.schema.authentication.auth import (
     RegisterResponse,
     TokenResponse,
 )
-from app.service.authentication.login import LoginService
+from app.service.authentication.login_service import LoginService
 from app.service.authentication.models import LoginCommand, RegisterCommand
-from app.service.authentication.password import PasswordService
-from app.service.authentication.registration import RegistrationService
-from app.service.authentication.token import TokenService
-from app.service.authentication.token_refresh import TokenRefreshService
+from app.service.authentication.registration_service import RegistrationService
+from app.service.authentication.token_refresh_service import TokenRefreshService
 from app.util.logger import log
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
-
-_password_service = PasswordService()
-_token_service = TokenService(settings)
 
 
 def _make_token_response(token_pair) -> TokenResponse:
@@ -49,18 +41,15 @@ def _make_token_response(token_pair) -> TokenResponse:
 
 
 @router.post("/register", response_model=RegisterResponse, status_code=HttpCode._201)
-async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)) -> RegisterResponse:
+async def register(
+    body: RegisterRequest,
+    registration_service: RegistrationService = Depends(get_registration_service),
+) -> RegisterResponse:
     """Register a new user account and return JWT tokens."""
     log.info("Received registration request for email: %s", body.email)
 
-    service = RegistrationService(
-        user_repo=AppUserRepository(db),
-        refresh_token_repo=RefreshTokenRepository(db),
-        password_service=_password_service,
-        token_service=_token_service,
-    )
     try:
-        user, token_pair = await service.register(
+        user, token_pair = await registration_service.register(
             RegisterCommand(
                 email=body.email,
                 plain_password=body.password,
@@ -84,19 +73,15 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)) ->
 
 
 @router.post("/login", response_model=TokenResponse, status_code=HttpCode._200)
-async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)) -> TokenResponse:
+async def login(
+    body: LoginRequest,
+    login_service: LoginService = Depends(get_login_service),
+) -> TokenResponse:
     """Authenticate user credentials and return JWT tokens."""
     log.info("Received login request for email: %s", body.email)
 
-    service = LoginService(
-        user_repo=AppUserRepository(db),
-        refresh_token_repo=RefreshTokenRepository(db),
-        password_service=_password_service,
-        token_service=_token_service,
-        org_member_repo=OrganizationMemberRepository(db),
-    )
     try:
-        _, token_pair = await service.authenticate(
+        _, token_pair = await login_service.authenticate(
             LoginCommand(email=body.email, plain_password=body.password)
         )
     except InvalidCredentialsError:
@@ -114,18 +99,15 @@ async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)) -> Token
 
 
 @router.post("/refresh", response_model=TokenResponse, status_code=HttpCode._200)
-async def refresh_token(body: RefreshRequest, db: AsyncSession = Depends(get_db)) -> TokenResponse:
+async def refresh_token(
+    body: RefreshRequest,
+    token_refresh_service: TokenRefreshService = Depends(get_token_refresh_service),
+) -> TokenResponse:
     """Exchange a valid refresh token for a new access + refresh token pair."""
     log.info("Received token refresh request.")
 
-    service = TokenRefreshService(
-        user_repo=AppUserRepository(db),
-        refresh_token_repo=RefreshTokenRepository(db),
-        token_service=_token_service,
-        org_member_repo=OrganizationMemberRepository(db),
-    )
     try:
-        token_pair = await service.refresh(body.refresh_token)
+        token_pair = await token_refresh_service.refresh(body.refresh_token)
     except InvalidRefreshTokenError:
         raise HTTPException(
             status_code=HttpCode._401,
@@ -138,7 +120,7 @@ async def refresh_token(body: RefreshRequest, db: AsyncSession = Depends(get_db)
 @router.post("/logout", status_code=HttpCode._200)
 async def logout(
     body: LogoutRequest,
-    db: AsyncSession = Depends(get_db),
+    token_refresh_service: TokenRefreshService = Depends(get_token_refresh_service),
     current_user: AppUser = Depends(get_current_user),
 ) -> dict:
     """
@@ -147,14 +129,8 @@ async def logout(
     """
     log.info("Received logout request for user_id: %s", current_user.id)
 
-    service = TokenRefreshService(
-        user_repo=AppUserRepository(db),
-        refresh_token_repo=RefreshTokenRepository(db),
-        token_service=_token_service,
-        org_member_repo=OrganizationMemberRepository(db),
-    )
     try:
-        await service.revoke(body.refresh_token, requesting_user_id=current_user.id)
+        await token_refresh_service.revoke(body.refresh_token, requesting_user_id=current_user.id)
     except InvalidRefreshTokenError:
         raise HTTPException(
             status_code=HttpCode._401,
@@ -162,4 +138,3 @@ async def logout(
         )
 
     return {"message": HttpMessage.LOGOUT_SUCCESSFUL}
-

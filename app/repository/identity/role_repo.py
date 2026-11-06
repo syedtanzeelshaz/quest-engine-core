@@ -8,7 +8,7 @@ from app.repository.base import BaseRepository
 class RoleRepository(BaseRepository[Role]):
     """Data access repository for identity.role."""
 
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(self, session: AsyncSession | None = None) -> None:
         super().__init__(Role, session)
 
     async def find_by_name(self, name: str) -> Role | None:

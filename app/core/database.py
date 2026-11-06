@@ -12,6 +12,38 @@ from sqlalchemy.orm import DeclarativeBase
 from app.core.audit import register_audit_listeners
 from app.core.config import settings
 
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+from starlette.requests import Request
+from starlette.responses import Response
+
+# Request-scoped database session and transaction lifecycle management via ContextVar
+class DatabaseSessionMiddleware(BaseHTTPMiddleware):
+    """
+    Middleware that manages an asynchronous database session per HTTP request.
+    Stores the session in ContextVar for the duration of the request.
+    Automatically commits on successful 2xx/3xx response, rolls back on error or 4xx/5xx.
+    """
+
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+        # If an active session is already present (e.g. injected in test fixtures), proceed
+        if get_current_session() is not None:
+            return await call_next(request)
+
+        async with AsyncSessionLocal() as session:
+            token = set_current_session(session)
+            try:
+                response = await call_next(request)
+                if response.status_code >= 400:
+                    await session.rollback()
+                else:
+                    await session.commit()
+                return response
+            except Exception:
+                await session.rollback()
+                raise
+            finally:
+                reset_current_session(token)
+
 
 class Base(DeclarativeBase):
     """Modern SQLAlchemy 2.0 Declarative Base class."""
@@ -75,3 +107,4 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             raise
         finally:
             reset_current_session(token)
+

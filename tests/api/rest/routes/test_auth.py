@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from app.api.rest.constants.http_codes import HttpCode
 from app.api.rest.constants.http_messages import HttpMessage
 from app.api.rest.deps import get_current_user
-from app.core.database import get_db
+from app.core.database import get_db, reset_current_session, set_current_session
 from app.core.primitives.exceptions import (
     EmailAlreadyExistsError,
     InvalidCredentialsError,
@@ -21,8 +21,10 @@ from app.service.authentication.models import AuthTokenPair
 @pytest.fixture
 def client(mock_db_session: MagicMock) -> TestClient:
     app.dependency_overrides[get_db] = lambda: mock_db_session
+    token = set_current_session(mock_db_session)
     client = TestClient(app)
     yield client
+    reset_current_session(token)
     app.dependency_overrides.clear()
 
 

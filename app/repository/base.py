@@ -6,7 +6,7 @@ from typing import Generic, TypeVar
 from sqlalchemy import ColumnElement, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import Base
+from app.core.database import Base, get_current_session
 
 ModelType = TypeVar("ModelType", bound=Base)
 
@@ -33,9 +33,31 @@ class Pageable:
 class BaseRepository(Generic[ModelType]):
     """Generic base repository providing standard asynchronous CRUD operations."""
 
-    def __init__(self, model: type[ModelType], session: AsyncSession) -> None:
+    def __init__(self, model: type[ModelType], session: AsyncSession | None = None) -> None:
         self.model = model
-        self.session = session
+        self._explicit_session = session
+
+    @property
+    def session(self) -> AsyncSession:
+        """
+        Return the active database session.
+        Uses the explicitly provided session if passed during instantiation,
+        or dynamically retrieves the active session from the ContextVar context.
+        """
+        if self._explicit_session is not None:
+            return self._explicit_session
+        current = get_current_session()
+        if current is None:
+            raise RuntimeError(
+                f"No active database session found in context for {self.__class__.__name__}. "
+                "Ensure operations are executed within a request lifecycle, "
+                "@transactional boundary, or provide a session explicitly."
+            )
+        return current
+
+    @session.setter
+    def session(self, value: AsyncSession | None) -> None:
+        self._explicit_session = value
 
     async def find_by_id(self, id: int) -> ModelType | None:
         """Fetch a single record by its primary key ID."""

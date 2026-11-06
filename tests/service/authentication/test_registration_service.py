@@ -10,7 +10,7 @@ from app.repository.identity.app_user_repo import AppUserRepository
 from app.repository.identity.refresh_token_repo import RefreshTokenRepository
 from app.service.authentication.models import AuthTokenPair, RegisterCommand
 from app.service.authentication.password import PasswordService
-from app.service.authentication.registration import RegistrationService
+from app.service.authentication.registration_service import RegistrationService
 from app.service.authentication.token import TokenService
 
 

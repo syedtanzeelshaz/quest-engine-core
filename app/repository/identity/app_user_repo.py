@@ -8,7 +8,7 @@ from app.repository.base import BaseRepository
 class AppUserRepository(BaseRepository[AppUser]):
     """Data access repository for identity.app_user."""
 
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(self, session: AsyncSession | None = None) -> None:
         super().__init__(AppUser, session)
 
     async def find_by_email(self, email: str) -> AppUser | None:

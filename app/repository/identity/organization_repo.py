@@ -15,7 +15,7 @@ from app.repository.base import BaseRepository
 class OrganizationRepository(BaseRepository[Organization]):
     """Data access repository for identity.organization."""
 
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(self, session: AsyncSession | None = None) -> None:
         super().__init__(Organization, session)
 
     async def find_by_slug(self, slug: str) -> Organization | None:

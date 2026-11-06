@@ -11,7 +11,7 @@ from app.repository.identity.organization_member_repo import (
     OrganizationMemberRepository,
 )
 from app.repository.identity.refresh_token_repo import RefreshTokenRepository
-from app.service.authentication.login import LoginService
+from app.service.authentication.login_service import LoginService
 from app.service.authentication.models import AuthTokenPair, LoginCommand
 from app.service.authentication.password import PasswordService
 from app.service.authentication.token import TokenService

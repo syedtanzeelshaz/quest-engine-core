@@ -7,7 +7,7 @@ import app.model
 from app import __version__
 from app.api.rest.routes import auth, health
 from app.core.bootstrap import run_startup_checks
-from app.core.database import engine
+from app.core.database import DatabaseSessionMiddleware, engine
 from app.util.logger import log
 
 
@@ -35,6 +35,9 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Automatically manages request-scoped database session and transaction lifecycle
+    app.add_middleware(DatabaseSessionMiddleware)
 
     # Infrastructure route (Unversioned for load balancers / k8s probes) -> GET /health
     app.include_router(health.router, prefix="/health")

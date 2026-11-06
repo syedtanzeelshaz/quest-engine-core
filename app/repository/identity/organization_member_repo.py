@@ -9,7 +9,7 @@ from app.repository.base import BaseRepository
 class OrganizationMemberRepository(BaseRepository[OrganizationMember]):
     """Data access repository for identity.organization_member."""
 
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(self, session: AsyncSession | None = None) -> None:
         super().__init__(OrganizationMember, session)
 
     async def find_all_active_by_user(self, user_id: int) -> list[OrganizationMember]:

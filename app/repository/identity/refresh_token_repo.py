@@ -10,7 +10,7 @@ from app.repository.base import BaseRepository
 class RefreshTokenRepository(BaseRepository[RefreshToken]):
     """Data access repository for identity.refresh_token."""
 
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(self, session: AsyncSession | None = None) -> None:
         super().__init__(RefreshToken, session)
 
     async def find_by_token_hash(self, token_hash: str) -> RefreshToken | None:

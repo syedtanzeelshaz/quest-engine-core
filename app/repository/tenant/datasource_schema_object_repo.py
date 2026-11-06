@@ -7,6 +7,6 @@ from app.repository.base import BaseRepository
 class DatasourceSchemaObjectRepository(BaseRepository[DatasourceSchemaObject]):
     """Data access repository for tenant.datasource_schema_object."""
 
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(self, session: AsyncSession | None = None) -> None:
         super().__init__(DatasourceSchemaObject, session)
 
