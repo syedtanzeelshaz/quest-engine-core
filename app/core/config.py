@@ -31,11 +31,6 @@ class Settings(BaseSettings):
     def DATABASE_URL(self) -> str:
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
-    @computed_field
-    @property
-    def is_graphql_ide_enabled(self) -> bool:
-        return self.ENVIRONMENT.lower() != "production"
-
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 settings = Settings()

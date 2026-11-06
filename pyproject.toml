@@ -16,13 +16,11 @@ dependencies = [
   "pydantic-settings>=2.2.1",
   "python-jose[cryptography]>=3.5.0",
   "sqlalchemy[asyncio]==2.0.54",
-  "strawberry-graphql[fastapi]>=0.327.7",
   "uvicorn[standard]>=0.28.0",
 ]
 
 [project.scripts]
 dev = "app:main"
-export-schema = "app.graphql.exporter:main"
 test = "pytest:main"
 
 [dependency-groups]

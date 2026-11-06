@@ -1,5 +1,5 @@
 """
-Core domain primitives (enums, constants, and root exceptions).
+Core domain primitives (constants and root exceptions).
 """
 from app.core.primitives.constants import (
     DatasourceMessage,
@@ -7,7 +7,6 @@ from app.core.primitives.constants import (
     SecurityMessage,
     UserMessage,
 )
-from app.core.primitives.enums import CountryCode, Gender
 from app.core.primitives.exceptions import (
     AccessDeniedError,
     AuthenticationRequiredError,
@@ -26,10 +25,8 @@ from app.core.primitives.exceptions import (
 __all__ = [
     "AccessDeniedError",
     "AuthenticationRequiredError",
-    "CountryCode",
     "DatasourceMessage",
     "EmailAlreadyExistsError",
-    "Gender",
     "InvalidCredentialsError",
     "InvalidInputError",
     "InvalidRefreshTokenError",
@@ -43,4 +40,3 @@ __all__ = [
     "UserNotActiveError",
     "UserNotFoundError",
 ]
-
