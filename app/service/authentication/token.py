@@ -111,6 +111,18 @@ class TokenService:
         return datetime.now(UTC) + timedelta(days=self._refresh_expire_days)
 
 
+    def decode_token(self, raw_token: str) -> dict:
+        """
+        Decode a JWT token and return its raw payload dict without type validation.
+        Useful for inspecting claims when the token type is irrelevant.
+        Raises InvalidTokenError if the token is malformed or expired.
+        """
+        try:
+            return jwt.decode(raw_token, self._secret, algorithms=[self._algorithm])
+        except JWTError as exc:
+            raise InvalidTokenError(f"Token is invalid or expired: {exc}") from exc
+
+
     @staticmethod
     def hash_token(raw_token: str) -> str:
         """SHA-256 hash a raw JWT string for safe DB storage (64 hex chars)."""

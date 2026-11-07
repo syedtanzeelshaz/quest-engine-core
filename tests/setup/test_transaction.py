@@ -62,37 +62,35 @@ async def test_transactional_nested_savepoint(mock_db_session: MagicMock):
 
 @pytest.mark.anyio
 async def test_transactional_resolves_self_session(mock_db_session: MagicMock):
-    """Verify @transactional resolves session from self.session."""
+    """Verify @transactional uses ContextVar session when present on a service instance."""
     class DummyService:
-        def __init__(self, session):
-            self.session = session
-
         @transactional
         async def do_work(self):
             return "done"
 
-    service = DummyService(mock_db_session)
-    result = await service.do_work()
-    assert result == "done"
-    mock_db_session.begin.assert_called_once()
+    token = set_current_session(mock_db_session)
+    try:
+        service = DummyService()
+        result = await service.do_work()
+        assert result == "done"
+        mock_db_session.begin.assert_called_once()
+    finally:
+        reset_current_session(token)
 
 
 @pytest.mark.anyio
 async def test_transactional_resolves_repo_session(mock_db_session: MagicMock):
-    """Verify @transactional resolves session from an injected repository on self."""
-    class DummyRepo:
-        def __init__(self, session):
-            self.session = session
-
+    """Verify @transactional uses ContextVar session even when called from a repo-backed service."""
     class DummyService:
-        def __init__(self, repo):
-            self._user_repo = repo
-
         @transactional
         async def do_work(self):
             return "repo_done"
 
-    service = DummyService(DummyRepo(mock_db_session))
-    result = await service.do_work()
-    assert result == "repo_done"
-    mock_db_session.begin.assert_called_once()
+    token = set_current_session(mock_db_session)
+    try:
+        service = DummyService()
+        result = await service.do_work()
+        assert result == "repo_done"
+        mock_db_session.begin.assert_called_once()
+    finally:
+        reset_current_session(token)

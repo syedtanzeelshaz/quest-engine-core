@@ -1,12 +1,16 @@
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.api.rest.constants.http_codes import HttpCode
 from app.api.rest.constants.http_messages import HttpMessage
-from app.api.rest.deps import get_current_user
-from app.core.database import get_db, reset_current_session, set_current_session
+from app.api.rest.deps import (
+    get_current_user,
+    get_login_service,
+    get_registration_service,
+    get_token_refresh_service,
+)
 from app.core.primitives.exceptions import (
     EmailAlreadyExistsError,
     InvalidCredentialsError,
@@ -19,19 +23,15 @@ from app.service.authentication.models import AuthTokenPair
 
 
 @pytest.fixture
-def client(mock_db_session: MagicMock) -> TestClient:
-    app.dependency_overrides[get_db] = lambda: mock_db_session
-    token = set_current_session(mock_db_session)
+def client() -> TestClient:
     client = TestClient(app)
     yield client
-    reset_current_session(token)
     app.dependency_overrides.clear()
 
 
 class TestAuthRegisterRoute:
-    @patch("app.api.rest.routes.auth.RegistrationService")
-    def test_register_success_returns_201(self, mock_service_cls: MagicMock, client: TestClient) -> None:
-        mock_service = mock_service_cls.return_value
+    def test_register_success_returns_201(self, client: TestClient) -> None:
+        mock_service = MagicMock()
         dummy_user = AppUser(
             id=1,
             email="test@example.com",
@@ -45,6 +45,7 @@ class TestAuthRegisterRoute:
             expires_in=900,
         )
         mock_service.register = AsyncMock(return_value=(dummy_user, dummy_tokens))
+        app.dependency_overrides[get_registration_service] = lambda: mock_service
 
         payload = {
             "email": "test@example.com",
@@ -62,10 +63,10 @@ class TestAuthRegisterRoute:
         assert data["tokens"]["refresh_token"] == "ref_token"
 
 
-    @patch("app.api.rest.routes.auth.RegistrationService")
-    def test_register_duplicate_email_returns_409(self, mock_service_cls: MagicMock, client: TestClient) -> None:
-        mock_service = mock_service_cls.return_value
+    def test_register_duplicate_email_returns_409(self, client: TestClient) -> None:
+        mock_service = MagicMock()
         mock_service.register = AsyncMock(side_effect=EmailAlreadyExistsError("Email exists"))
+        app.dependency_overrides[get_registration_service] = lambda: mock_service
 
         payload = {
             "email": "existing@example.com",
@@ -90,12 +91,12 @@ class TestAuthRegisterRoute:
 
 
 class TestAuthLoginRoute:
-    @patch("app.api.rest.routes.auth.LoginService")
-    def test_login_success_returns_200(self, mock_service_cls: MagicMock, client: TestClient) -> None:
-        mock_service = mock_service_cls.return_value
+    def test_login_success_returns_200(self, client: TestClient) -> None:
+        mock_service = MagicMock()
         dummy_user = AppUser(id=1, email="user@example.com", status=AppUserStatus.ACTIVE)
         dummy_tokens = AuthTokenPair(access_token="acc", refresh_token="ref", expires_in=900)
         mock_service.authenticate = AsyncMock(return_value=(dummy_user, dummy_tokens))
+        app.dependency_overrides[get_login_service] = lambda: mock_service
 
         payload = {"email": "user@example.com", "password": "validpassword"}
         response = client.post("/api/v1/auth/login", json=payload)
@@ -106,10 +107,10 @@ class TestAuthLoginRoute:
         assert data["refresh_token"] == "ref"
 
 
-    @patch("app.api.rest.routes.auth.LoginService")
-    def test_login_invalid_credentials_returns_401(self, mock_service_cls: MagicMock, client: TestClient) -> None:
-        mock_service = mock_service_cls.return_value
+    def test_login_invalid_credentials_returns_401(self, client: TestClient) -> None:
+        mock_service = MagicMock()
         mock_service.authenticate = AsyncMock(side_effect=InvalidCredentialsError("Invalid credentials"))
+        app.dependency_overrides[get_login_service] = lambda: mock_service
 
         payload = {"email": "user@example.com", "password": "wrongpassword"}
         response = client.post("/api/v1/auth/login", json=payload)
@@ -118,10 +119,10 @@ class TestAuthLoginRoute:
         assert response.json()["detail"] == HttpMessage.INVALID_CREDENTIALS
 
 
-    @patch("app.api.rest.routes.auth.LoginService")
-    def test_login_inactive_account_returns_403(self, mock_service_cls: MagicMock, client: TestClient) -> None:
-        mock_service = mock_service_cls.return_value
+    def test_login_inactive_account_returns_403(self, client: TestClient) -> None:
+        mock_service = MagicMock()
         mock_service.authenticate = AsyncMock(side_effect=UserNotActiveError("Not active"))
+        app.dependency_overrides[get_login_service] = lambda: mock_service
 
         payload = {"email": "user@example.com", "password": "password"}
         response = client.post("/api/v1/auth/login", json=payload)
@@ -131,11 +132,11 @@ class TestAuthLoginRoute:
 
 
 class TestAuthRefreshRoute:
-    @patch("app.api.rest.routes.auth.TokenRefreshService")
-    def test_refresh_success_returns_200(self, mock_service_cls: MagicMock, client: TestClient) -> None:
-        mock_service = mock_service_cls.return_value
+    def test_refresh_success_returns_200(self, client: TestClient) -> None:
+        mock_service = MagicMock()
         dummy_tokens = AuthTokenPair(access_token="new_acc", refresh_token="new_ref", expires_in=900)
         mock_service.refresh = AsyncMock(return_value=dummy_tokens)
+        app.dependency_overrides[get_token_refresh_service] = lambda: mock_service
 
         payload = {"refresh_token": "valid_refresh_token"}
         response = client.post("/api/v1/auth/refresh", json=payload)
@@ -146,10 +147,10 @@ class TestAuthRefreshRoute:
         assert data["refresh_token"] == "new_ref"
 
 
-    @patch("app.api.rest.routes.auth.TokenRefreshService")
-    def test_refresh_invalid_token_returns_401(self, mock_service_cls: MagicMock, client: TestClient) -> None:
-        mock_service = mock_service_cls.return_value
+    def test_refresh_invalid_token_returns_401(self, client: TestClient) -> None:
+        mock_service = MagicMock()
         mock_service.refresh = AsyncMock(side_effect=InvalidRefreshTokenError("Invalid or expired"))
+        app.dependency_overrides[get_token_refresh_service] = lambda: mock_service
 
         payload = {"refresh_token": "invalid_refresh_token"}
         response = client.post("/api/v1/auth/refresh", json=payload)
@@ -159,10 +160,10 @@ class TestAuthRefreshRoute:
 
 
 class TestAuthLogoutRoute:
-    @patch("app.api.rest.routes.auth.TokenRefreshService")
-    def test_logout_success_returns_200(self, mock_service_cls: MagicMock, client: TestClient) -> None:
-        mock_service = mock_service_cls.return_value
+    def test_logout_success_returns_200(self, client: TestClient) -> None:
+        mock_service = MagicMock()
         mock_service.revoke = AsyncMock(return_value=None)
+        app.dependency_overrides[get_token_refresh_service] = lambda: mock_service
 
         dummy_current_user = AppUser(id=1, email="user@example.com", status=AppUserStatus.ACTIVE)
         app.dependency_overrides[get_current_user] = lambda: dummy_current_user
