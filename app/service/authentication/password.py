@@ -16,9 +16,11 @@ class PasswordService:
         """Hash a plain-text password using bcrypt offloaded to a worker thread."""
         return await asyncio.to_thread(self._compute_hash, plain_password)
 
+
     async def verify(self, plain_password: str, hashed_password: str) -> bool:
         """Verify a plain-text password against a bcrypt hash offloaded to a worker thread."""
         return await asyncio.to_thread(self._check_password, plain_password, hashed_password)
+
 
     @staticmethod
     def _compute_hash(plain_password: str) -> str:
@@ -26,6 +28,7 @@ class PasswordService:
         pwd_bytes = plain_password.encode("utf-8")
         salt = bcrypt.gensalt()
         return bcrypt.hashpw(pwd_bytes, salt).decode("utf-8")
+
 
     @staticmethod
     def _check_password(plain_password: str, hashed_password: str) -> bool:

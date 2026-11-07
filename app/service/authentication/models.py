@@ -1,8 +1,7 @@
 """
 Authentication domain value objects.
 
-Pure Python dataclasses — no FastAPI, no SQLAlchemy, no Pydantic.
-These are the internal command/result types passed between auth services.
+Pure Python dataclasses. These are the internal command/result types passed between auth services.
 """
 from dataclasses import dataclass
 

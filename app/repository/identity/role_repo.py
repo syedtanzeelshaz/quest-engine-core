@@ -11,6 +11,7 @@ class RoleRepository(BaseRepository[Role]):
     def __init__(self, session: AsyncSession | None = None) -> None:
         super().__init__(Role, session)
 
+
     async def find_by_name(self, name: str) -> Role | None:
         """Fetch a role by its unique name (e.g. SUPER_ADMIN, ADMIN, MEMBER)."""
         stmt = select(Role).where(Role.name == name).limit(1)

@@ -56,6 +56,7 @@ class TestLoginService:
             expires_in=900,
         )
 
+
     @pytest.mark.anyio
     async def test_authenticate_success(self) -> None:
         self.mock_user_repo.find_by_email.return_value = self.dummy_user
@@ -83,6 +84,7 @@ class TestLoginService:
         assert saved_rt.token_hash == "hashed_refresh_token"
         assert saved_rt.is_revoked is False
 
+
     @pytest.mark.anyio
     async def test_authenticate_user_not_found_raises_invalid_credentials(self) -> None:
         self.mock_user_repo.find_by_email.return_value = None
@@ -94,6 +96,7 @@ class TestLoginService:
         self.mock_password_service.verify.assert_not_called()
         self.mock_refresh_token_repo.save_and_flush.assert_not_called()
 
+
     @pytest.mark.anyio
     async def test_authenticate_wrong_password_raises_invalid_credentials(self) -> None:
         self.mock_user_repo.find_by_email.return_value = self.dummy_user
@@ -104,6 +107,7 @@ class TestLoginService:
             await self.service.authenticate(command)
 
         self.mock_refresh_token_repo.save_and_flush.assert_not_called()
+
 
     @pytest.mark.anyio
     async def test_authenticate_inactive_user_raises_user_not_active_error(self) -> None:
@@ -121,4 +125,3 @@ class TestLoginService:
             await self.service.authenticate(command)
 
         self.mock_refresh_token_repo.save_and_flush.assert_not_called()
-

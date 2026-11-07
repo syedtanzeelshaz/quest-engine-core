@@ -18,10 +18,12 @@ class OrganizationRepository(BaseRepository[Organization]):
     def __init__(self, session: AsyncSession | None = None) -> None:
         super().__init__(Organization, session)
 
+
     async def find_by_slug(self, slug: str) -> Organization | None:
         """Fetch an organization by its unique URL slug."""
         stmt = select(Organization).where(Organization.slug == slug).limit(1)
         return await self.session.scalar(stmt)
+
 
     async def exists_by_slug(self, slug: str) -> bool:
         """Check whether an organization with the given slug exists."""
@@ -32,6 +34,7 @@ class OrganizationRepository(BaseRepository[Organization]):
             .limit(1)
         )
         return (await self.session.scalar(stmt)) is not None
+
 
     async def find_active_users_by_org_ids(
         self,

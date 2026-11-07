@@ -13,11 +13,13 @@ class DatasourceRepository(BaseRepository[Datasource]):
     def __init__(self, session: AsyncSession | None = None) -> None:
         super().__init__(Datasource, session)
 
+
     async def find_all_by_org(self, org_id: int) -> list[Datasource]:
         """Fetch all datasources belonging to an organization."""
         stmt = select(Datasource).where(Datasource.org_id == org_id)
         res = await self.session.scalars(stmt)
         return list(res.all())
+
 
     async def find_all_by_org_ids(self, org_ids: Sequence[int]) -> dict[int, list[Datasource]]:
         """Fetch all datasources belonging to the specified organization IDs, grouped by org_id."""

@@ -59,6 +59,7 @@ class TestTokenRefreshServiceRefresh:
             expires_in=900,
         )
 
+
     @pytest.mark.anyio
     async def test_refresh_success_rotates_tokens(self) -> None:
         raw_token = "valid_old_refresh_token"
@@ -94,6 +95,7 @@ class TestTokenRefreshServiceRefresh:
         assert new_token_record.token_hash == "hash_of_new_refresh_token"
         assert new_token_record.is_revoked is False
 
+
     @pytest.mark.anyio
     async def test_refresh_token_not_found_or_already_used_raises_error(self) -> None:
         self.mock_token_service.verify_refresh_token.return_value = 7
@@ -104,6 +106,7 @@ class TestTokenRefreshServiceRefresh:
             await self.service.refresh("stale_token")
 
         self.mock_user_repo.find_by_id.assert_not_called()
+
 
     @pytest.mark.anyio
     async def test_refresh_inactive_user_raises_error(self) -> None:
@@ -140,6 +143,7 @@ class TestTokenRefreshServiceRevoke:
             org_member_repo=self.mock_org_member_repo,
         )
 
+
     @pytest.mark.anyio
     async def test_revoke_active_token_marks_it_revoked(self) -> None:
         token_record = RefreshToken(
@@ -157,6 +161,7 @@ class TestTokenRefreshServiceRevoke:
         assert token_record.is_revoked is True
         assert token_record.revoked_at is not None
         self.mock_refresh_token_repo.save_and_flush.assert_called_once_with(token_record)
+
 
     @pytest.mark.anyio
     async def test_revoke_token_belonging_to_another_user_raises_error(self) -> None:
@@ -176,6 +181,7 @@ class TestTokenRefreshServiceRevoke:
         assert token_record.is_revoked is False
         self.mock_refresh_token_repo.save_and_flush.assert_not_called()
 
+
     @pytest.mark.anyio
     async def test_revoke_nonexistent_token_succeeds_idempotently(self) -> None:
         self.mock_token_service.hash_token.return_value = "unknown_hash"
@@ -184,6 +190,7 @@ class TestTokenRefreshServiceRevoke:
         # Should not raise any exception
         await self.service.revoke(raw_refresh_token="nonexistent_token", requesting_user_id=5)
         self.mock_refresh_token_repo.save_and_flush.assert_not_called()
+
 
     @pytest.mark.anyio
     async def test_revoke_already_revoked_token_is_idempotent(self) -> None:
@@ -202,4 +209,3 @@ class TestTokenRefreshServiceRevoke:
 
         # Already revoked, so save_and_flush should not be called again
         self.mock_refresh_token_repo.save_and_flush.assert_not_called()
-

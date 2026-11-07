@@ -35,6 +35,7 @@ class LoginService:
         self._token_service = token_service
         self._org_member_repo = org_member_repo
 
+
     @transactional
     async def authenticate(self, command: LoginCommand) -> tuple[AppUser, AuthTokenPair]:
         """
@@ -80,6 +81,7 @@ class LoginService:
         await self._persist_refresh_token(user.id, token_pair.refresh_token)
 
         return user, token_pair
+
 
     async def _persist_refresh_token(self, user_id: int, raw_refresh_token: str) -> None:
         token_hash = self._token_service.hash_token(raw_refresh_token)

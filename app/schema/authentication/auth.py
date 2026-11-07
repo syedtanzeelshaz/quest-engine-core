@@ -8,6 +8,7 @@ class RegisterRequest(BaseModel):
     first_name: str
     last_name: str
 
+
     @field_validator("password")
     @classmethod
     def password_length(cls, v: str) -> str:
@@ -16,6 +17,7 @@ class RegisterRequest(BaseModel):
         if len(v.encode("utf-8")) > 72:
             raise ValueError("Password cannot exceed 72 bytes.")
         return v
+
 
     @field_validator("first_name", "last_name")
     @classmethod

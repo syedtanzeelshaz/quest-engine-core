@@ -24,6 +24,7 @@ class Pageable:
     sort_by: ColumnElement | None = field(default=None, compare=False)
     sort_order: SortOrder = SortOrder.ASC
 
+
     @property
     def offset(self) -> int:
         """Calculated row offset for SQL OFFSET clause."""
@@ -36,6 +37,7 @@ class BaseRepository(Generic[ModelType]):
     def __init__(self, model: type[ModelType], session: AsyncSession | None = None) -> None:
         self.model = model
         self._explicit_session = session
+
 
     @property
     def session(self) -> AsyncSession:
@@ -55,13 +57,16 @@ class BaseRepository(Generic[ModelType]):
             )
         return current
 
+
     @session.setter
     def session(self, value: AsyncSession | None) -> None:
         self._explicit_session = value
 
+
     async def find_by_id(self, id: int) -> ModelType | None:
         """Fetch a single record by its primary key ID."""
         return await self.session.get(self.model, id)
+
 
     async def find_all(self, pageable: Pageable | None = None) -> list[ModelType]:
         """Fetch records, optionally scoped by a Pageable page window with ordering."""
@@ -73,6 +78,7 @@ class BaseRepository(Generic[ModelType]):
         res = await self.session.scalars(stmt)
         return list(res.all())
 
+
     async def find_all_by_ids(self, ids: Sequence[int]) -> list[ModelType]:
         """Fetch all records matching the provided sequence of IDs."""
         if not ids:
@@ -80,6 +86,7 @@ class BaseRepository(Generic[ModelType]):
         stmt = select(self.model).where(self.model.id.in_(ids))
         res = await self.session.scalars(stmt)
         return list(res.all())
+
 
     async def _prefetch_existing(self, objs: Sequence[ModelType]) -> None:
         """Batch-load existing records into the identity map in a single query to eliminate N+1 SELECTs."""
@@ -92,9 +99,11 @@ class BaseRepository(Generic[ModelType]):
             stmt = select(self.model).where(self.model.id.in_(ids))
             await self.session.scalars(stmt)
 
+
     async def save(self, obj: ModelType) -> ModelType:
         """Stage an entity for insert or update without an immediate flush."""
         return await self.session.merge(obj)
+
 
     async def save_all(self, objs: Sequence[ModelType]) -> list[ModelType]:
         """Stage multiple entities for insert or update without an immediate flush."""
@@ -103,11 +112,13 @@ class BaseRepository(Generic[ModelType]):
         await self._prefetch_existing(objs)
         return [await self.session.merge(obj) for obj in objs]
 
+
     async def save_and_flush(self, obj: ModelType) -> ModelType:
         """Stage an entity for insert or update and immediately flush changes."""
         merged_obj = await self.session.merge(obj)
         await self.session.flush()
         return merged_obj
+
 
     async def save_all_and_flush(self, objs: Sequence[ModelType]) -> list[ModelType]:
         """Stage multiple entities for insert or update and immediately flush changes."""
@@ -118,10 +129,12 @@ class BaseRepository(Generic[ModelType]):
         await self.session.flush()
         return merged_objs
 
+
     async def delete(self, obj: ModelType) -> None:
         """Delete a tracked record."""
         await self.session.delete(obj)
         await self.session.flush()
+
 
     async def delete_by_id(self, id: int) -> bool:
         """Fetch by ID and delete if found."""
@@ -132,6 +145,7 @@ class BaseRepository(Generic[ModelType]):
             return True
         return False
 
+
     async def delete_all(self, objs: Sequence[ModelType]) -> None:
         """Delete multiple tracked records."""
         if not objs:
@@ -139,6 +153,7 @@ class BaseRepository(Generic[ModelType]):
         for obj in objs:
             await self.session.delete(obj)
         await self.session.flush()
+
 
     async def delete_all_by_ids(self, ids: Sequence[int]) -> int:
         """Fetch records by IDs and delete them."""
@@ -155,6 +170,7 @@ class BaseRepository(Generic[ModelType]):
         """Count total rows in the table."""
         stmt = select(func.count()).select_from(self.model)
         return (await self.session.scalar(stmt)) or 0
+
 
     async def exists_by_id(self, id: int) -> bool:
         """Check whether a record with the given ID exists."""

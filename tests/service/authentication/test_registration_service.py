@@ -57,6 +57,7 @@ class TestRegistrationService:
             expires_in=900,
         )
 
+
     @pytest.mark.anyio
     async def test_register_success(self) -> None:
         self.mock_user_repo.exists_by_email.return_value = False
@@ -87,6 +88,7 @@ class TestRegistrationService:
         assert saved_rt.token_hash == "hashed_refresh_token"
         assert saved_rt.is_revoked is False
 
+
     @pytest.mark.anyio
     async def test_register_duplicate_email_raises_error(self) -> None:
         self.mock_user_repo.exists_by_email.return_value = True
@@ -97,4 +99,3 @@ class TestRegistrationService:
         self.mock_password_service.hash.assert_not_called()
         self.mock_user_repo.save_and_flush.assert_not_called()
         self.mock_refresh_token_repo.save_and_flush.assert_not_called()
-

@@ -5,7 +5,6 @@ Coordinates token cryptographic verification with user account existence and sta
 """
 
 from app.core.primitives.exceptions import (
-    InvalidTokenError,
     UserNotActiveError,
     UserNotFoundError,
 )
@@ -24,6 +23,7 @@ class CurrentUserService:
     ) -> None:
         self._user_repo = user_repo
         self._token_service = token_service
+
 
     async def get_user_from_token(self, raw_token: str) -> AppUser:
         """
@@ -45,6 +45,7 @@ class CurrentUserService:
             )
 
         return user
+
 
     async def get_active_user_by_id(self, user_id: int) -> AppUser:
         """

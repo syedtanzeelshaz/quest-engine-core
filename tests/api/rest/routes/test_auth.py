@@ -61,6 +61,7 @@ class TestAuthRegisterRoute:
         assert data["tokens"]["access_token"] == "acc_token"
         assert data["tokens"]["refresh_token"] == "ref_token"
 
+
     @patch("app.api.rest.routes.auth.RegistrationService")
     def test_register_duplicate_email_returns_409(self, mock_service_cls: MagicMock, client: TestClient) -> None:
         mock_service = mock_service_cls.return_value
@@ -76,6 +77,7 @@ class TestAuthRegisterRoute:
 
         assert response.status_code == HttpCode._409
         assert response.json()["detail"] == HttpMessage.EMAIL_ALREADY_REGISTERED
+
 
     def test_register_invalid_email_format_returns_422(self, client: TestClient) -> None:
         payload = {
@@ -103,6 +105,7 @@ class TestAuthLoginRoute:
         assert data["access_token"] == "acc"
         assert data["refresh_token"] == "ref"
 
+
     @patch("app.api.rest.routes.auth.LoginService")
     def test_login_invalid_credentials_returns_401(self, mock_service_cls: MagicMock, client: TestClient) -> None:
         mock_service = mock_service_cls.return_value
@@ -113,6 +116,7 @@ class TestAuthLoginRoute:
 
         assert response.status_code == HttpCode._401
         assert response.json()["detail"] == HttpMessage.INVALID_CREDENTIALS
+
 
     @patch("app.api.rest.routes.auth.LoginService")
     def test_login_inactive_account_returns_403(self, mock_service_cls: MagicMock, client: TestClient) -> None:
@@ -141,6 +145,7 @@ class TestAuthRefreshRoute:
         assert data["access_token"] == "new_acc"
         assert data["refresh_token"] == "new_ref"
 
+
     @patch("app.api.rest.routes.auth.TokenRefreshService")
     def test_refresh_invalid_token_returns_401(self, mock_service_cls: MagicMock, client: TestClient) -> None:
         mock_service = mock_service_cls.return_value
@@ -168,6 +173,7 @@ class TestAuthLogoutRoute:
         assert response.status_code == HttpCode._200
         assert response.json()["message"] == HttpMessage.LOGOUT_SUCCESSFUL
         mock_service.revoke.assert_called_once_with("token_to_revoke", requesting_user_id=1)
+
 
     def test_logout_unauthenticated_returns_401(self, client: TestClient) -> None:
         # Without overriding get_current_user or providing Authorization header

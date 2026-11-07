@@ -27,9 +27,6 @@ class TokenService:
         self._access_expire_minutes = settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
         self._refresh_expire_days = settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS
 
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
 
     def issue_pair(
         self,
@@ -90,6 +87,7 @@ class TokenService:
             expires_in=int(access_expire.total_seconds()),
         )
 
+
     def verify_access_token(self, token: str) -> int:
         """
         Decode and validate a JWT access token.
@@ -97,6 +95,7 @@ class TokenService:
         Raises InvalidTokenError on any failure.
         """
         return self._decode_and_validate(token, expected_type=_ACCESS_TOKEN_TYPE)
+
 
     def verify_refresh_token(self, token: str) -> int:
         """
@@ -106,18 +105,17 @@ class TokenService:
         """
         return self._decode_and_validate(token, expected_type=_REFRESH_TOKEN_TYPE)
 
+
     def refresh_token_expires_at(self) -> datetime:
         """Return the absolute expiry datetime for a newly issued refresh token."""
         return datetime.now(UTC) + timedelta(days=self._refresh_expire_days)
+
 
     @staticmethod
     def hash_token(raw_token: str) -> str:
         """SHA-256 hash a raw JWT string for safe DB storage (64 hex chars)."""
         return hashlib.sha256(raw_token.encode()).hexdigest()
 
-    # ------------------------------------------------------------------
-    # Internals
-    # ------------------------------------------------------------------
 
     def _decode_and_validate(self, token: str, expected_type: str) -> int:
         err_cls = InvalidRefreshTokenError if expected_type == _REFRESH_TOKEN_TYPE else InvalidTokenError

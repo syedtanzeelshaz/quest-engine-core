@@ -35,6 +35,7 @@ class TokenRefreshService:
         self._token_service = token_service
         self._org_member_repo = org_member_repo
 
+
     @transactional
     async def refresh(self, raw_refresh_token: str) -> AuthTokenPair:
         """
@@ -94,6 +95,7 @@ class TokenRefreshService:
 
         return new_token_pair
 
+
     @transactional
     async def revoke(self, raw_refresh_token: str, requesting_user_id: int) -> None:
         """
@@ -127,14 +129,12 @@ class TokenRefreshService:
         if not stored_token.is_revoked:
             await self._revoke_token_record(stored_token)
 
-    # ------------------------------------------------------------------
-    # Internals
-    # ------------------------------------------------------------------
 
     async def _revoke_token_record(self, token: RefreshToken) -> None:
         token.is_revoked = True
         token.revoked_at = datetime.now(UTC)
         await self._refresh_token_repo.save_and_flush(token)
+
 
     async def _persist_refresh_token(self, user_id: int, raw_refresh_token: str) -> None:
         token_hash = self._token_service.hash_token(raw_refresh_token)

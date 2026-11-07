@@ -13,6 +13,7 @@ class RefreshTokenRepository(BaseRepository[RefreshToken]):
     def __init__(self, session: AsyncSession | None = None) -> None:
         super().__init__(RefreshToken, session)
 
+
     async def find_by_token_hash(self, token_hash: str) -> RefreshToken | None:
         """Fetch an active (non-revoked, non-expired) refresh token by its SHA-256 hash."""
         now = datetime.now(UTC)
@@ -26,6 +27,7 @@ class RefreshTokenRepository(BaseRepository[RefreshToken]):
             .limit(1)
         )
         return await self.session.scalar(stmt)
+
 
     async def find_by_token_hash_any(self, token_hash: str) -> RefreshToken | None:
         """

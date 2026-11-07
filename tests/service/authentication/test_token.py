@@ -50,6 +50,7 @@ class TestTokenServiceIssuePair:
         assert refresh_payload["user_id"] == 42
         assert refresh_payload["type"] == "refresh"
 
+
     def test_issue_pair_handles_optional_fields_as_empty_or_none(self) -> None:
         pair = self.service.issue_pair(
             user_id=1,
@@ -75,11 +76,13 @@ class TestTokenServiceVerifyAccessToken:
         self.settings = test_settings
         self.service = TokenService(test_settings)
 
+
     def test_verify_access_token_success(self) -> None:
         pair = self.service.issue_pair(user_id=99, email="user@example.com")
         user_id = self.service.verify_access_token(pair.access_token)
 
         assert user_id == 99
+
 
     def test_verify_access_token_with_expired_token_raises_invalid_token_error(self) -> None:
         expired_payload = {
@@ -98,12 +101,14 @@ class TestTokenServiceVerifyAccessToken:
         with pytest.raises(InvalidTokenError, match="Token is invalid or expired"):
             self.service.verify_access_token(expired_token)
 
+
     def test_verify_access_token_with_tampered_signature_raises_error(self) -> None:
         pair = self.service.issue_pair(user_id=99, email="user@example.com")
         tampered_token = pair.access_token[:-4] + "abcd"
 
         with pytest.raises(InvalidTokenError, match="Token is invalid or expired"):
             self.service.verify_access_token(tampered_token)
+
 
     def test_verify_access_token_rejects_refresh_token_type(self) -> None:
         pair = self.service.issue_pair(user_id=99, email="user@example.com")
@@ -118,11 +123,13 @@ class TestTokenServiceVerifyRefreshToken:
         self.settings = test_settings
         self.service = TokenService(test_settings)
 
+
     def test_verify_refresh_token_success(self) -> None:
         pair = self.service.issue_pair(user_id=88, email="user@example.com")
         user_id = self.service.verify_refresh_token(pair.refresh_token)
 
         assert user_id == 88
+
 
     def test_verify_refresh_token_with_expired_token_raises_invalid_refresh_token_error(self) -> None:
         expired_payload = {
@@ -141,6 +148,7 @@ class TestTokenServiceVerifyRefreshToken:
         with pytest.raises(InvalidRefreshTokenError, match="Token is invalid or expired"):
             self.service.verify_refresh_token(expired_token)
 
+
     def test_verify_refresh_token_rejects_access_token_type(self) -> None:
         pair = self.service.issue_pair(user_id=88, email="user@example.com")
 
@@ -154,6 +162,7 @@ class TestTokenServiceUtilities:
         self.settings = test_settings
         self.service = TokenService(test_settings)
 
+
     def test_hash_token_produces_consistent_sha256_hex(self) -> None:
         token = "some-random-raw-jwt-string"
         hash1 = self.service.hash_token(token)
@@ -163,12 +172,14 @@ class TestTokenServiceUtilities:
         assert len(hash1) == 64
         assert hash1 != token
 
+
     def test_decode_token_returns_payload_dict(self) -> None:
         pair = self.service.issue_pair(user_id=10, email="decode@example.com")
         payload = self.service.decode_token(pair.access_token)
 
         assert payload["sub"] == "decode@example.com"
         assert payload["details"]["id"] == 10
+
 
     def test_refresh_token_expires_at_is_in_future(self) -> None:
         now = datetime.now(UTC)

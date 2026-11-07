@@ -20,16 +20,19 @@ class Settings(BaseSettings):
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
+
     @computed_field
     @property
     def ALEMBIC_DATABASE_URL(self) -> str:
         # Synchronous connection URL used specifically for Alembic schema migrations
         return f"postgresql+psycopg2://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
+
     @computed_field
     @property
     def DATABASE_URL(self) -> str:
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

@@ -12,6 +12,7 @@ class OrganizationMemberRepository(BaseRepository[OrganizationMember]):
     def __init__(self, session: AsyncSession | None = None) -> None:
         super().__init__(OrganizationMember, session)
 
+
     async def find_all_active_by_user(self, user_id: int) -> list[OrganizationMember]:
         """Fetch all active organization memberships for a user."""
         stmt = select(OrganizationMember).where(

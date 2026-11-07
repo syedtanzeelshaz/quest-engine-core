@@ -11,10 +11,12 @@ class AppUserRepository(BaseRepository[AppUser]):
     def __init__(self, session: AsyncSession | None = None) -> None:
         super().__init__(AppUser, session)
 
+
     async def find_by_email(self, email: str) -> AppUser | None:
         """Fetch a user by their unique email address."""
         stmt = select(AppUser).where(AppUser.email == email).limit(1)
         return await self.session.scalar(stmt)
+
 
     async def exists_by_email(self, email: str) -> bool:
         """Check whether a user with the given email exists."""
