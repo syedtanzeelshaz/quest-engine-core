@@ -75,6 +75,42 @@ class TestAuthRegisterRoute:
         assert data["tokens"]["refresh_token"] == "ref_token"
 
 
+    def test_register_with_operations_header_passes_to_service(self, client: TestClient) -> None:
+        mock_service = MagicMock()
+        dummy_user = AppUser(
+            id=2,
+            email="ops@example.com",
+            experience=Experience.OPERATIONS,
+            status=AppUserStatus.ACTIVE,
+        )
+        dummy_operator = MagicMock()
+        dummy_operator.first_name = "Jane"
+        dummy_operator.last_name = "Admin"
+        dummy_tokens = AuthTokenPair(
+            access_token="acc_token_ops",
+            refresh_token="ref_token_ops",
+            expires_in=900,
+        )
+        mock_service.register = AsyncMock(return_value=(dummy_user, dummy_operator, dummy_tokens))
+        app.dependency_overrides[get_registration_service] = lambda: mock_service
+
+        payload = {
+            "email": "ops@example.com",
+            "password": "Password123!",
+            "first_name": "Jane",
+            "last_name": "Admin",
+        }
+        response = client.post(
+            "/api/v1/auth/register",
+            json=payload,
+            headers={"X-Experience": "OPERATIONS"},
+        )
+
+        assert response.status_code == HttpCode._201
+        called_command = mock_service.register.call_args[0][0]
+        assert called_command.experience == Experience.OPERATIONS
+
+
     def test_register_duplicate_email_returns_409(self, client: TestClient) -> None:
         mock_service = MagicMock()
         mock_service.register = AsyncMock(side_effect=EmailAlreadyExistsError("Email exists"))
@@ -129,16 +165,30 @@ class TestAuthLoginRoute:
         payload = {
             "email": "ops@example.com",
             "password": "validpassword",
-            "experience": "OPERATIONS",
         }
-        response = client.post("/api/v1/auth/login", json=payload)
+        response = client.post(
+            "/api/v1/auth/login",
+            json=payload,
+            headers={"X-Experience": "OPERATIONS"},
+        )
 
         assert response.status_code == HttpCode._200
         data = response.json()
         assert data["access_token"] == "ops_acc"
-        # Verify LoginCommand was called with experience=OPERATIONS
+        # Verify LoginCommand was called with experience=OPERATIONS from header
         called_command = mock_service.authenticate.call_args[0][0]
         assert called_command.experience == Experience.OPERATIONS
+
+
+    def test_login_with_invalid_experience_header_returns_400(self, client: TestClient) -> None:
+        payload = {"email": "user@example.com", "password": "validpassword"}
+        response = client.post(
+            "/api/v1/auth/login",
+            json=payload,
+            headers={"X-Experience": "INVALID_EXP"},
+        )
+
+        assert response.status_code == HttpCode._400
 
 
     def test_login_invalid_credentials_returns_401(self, client: TestClient) -> None:

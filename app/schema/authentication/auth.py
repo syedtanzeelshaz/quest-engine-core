@@ -9,7 +9,6 @@ class RegisterRequest(BaseModel):
     password: str
     first_name: str
     last_name: str
-    experience: Experience = Experience.CUSTOMER
 
 
     @field_validator("password")
@@ -34,7 +33,6 @@ class LoginRequest(BaseModel):
     """Request body for user login."""
     email: EmailStr
     password: str
-    experience: Experience = Experience.CUSTOMER
 
 
 class RefreshRequest(BaseModel):

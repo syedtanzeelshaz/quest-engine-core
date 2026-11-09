@@ -4,10 +4,12 @@ from app.api.rest.constants.http_codes import HttpCode
 from app.api.rest.constants.http_messages import HttpMessage
 from app.api.rest.deps import (
     get_current_user,
+    get_experience_context,
     get_login_service,
     get_registration_service,
     get_token_refresh_service,
 )
+from app.core.primitives.enums import Experience
 from app.core.primitives.exceptions import (
     EmailAlreadyExistsError,
     InvalidCredentialsError,
@@ -43,10 +45,11 @@ def _make_token_response(token_pair) -> TokenResponse:
 @router.post("/register", response_model=RegisterResponse, status_code=HttpCode._201)
 async def register(
     body: RegisterRequest,
+    experience: Experience = Depends(get_experience_context),
     registration_service: RegistrationService = Depends(get_registration_service),
 ) -> RegisterResponse:
     """Register a new user account and return JWT tokens."""
-    log.info("Received registration request for email: %s, experience: %s", body.email, body.experience)
+    log.info("Received registration request for email: %s, experience: %s", body.email, experience)
 
     try:
         user, persona, token_pair = await registration_service.register(
@@ -55,7 +58,7 @@ async def register(
                 plain_password=body.password,
                 first_name=body.first_name,
                 last_name=body.last_name,
-                experience=body.experience,
+                experience=experience,
             )
         )
     except EmailAlreadyExistsError:
@@ -77,17 +80,18 @@ async def register(
 @router.post("/login", response_model=TokenResponse, status_code=HttpCode._200)
 async def login(
     body: LoginRequest,
+    experience: Experience = Depends(get_experience_context),
     login_service: LoginService = Depends(get_login_service),
 ) -> TokenResponse:
     """Authenticate user credentials and return JWT tokens."""
-    log.info("Received login request for email: %s, experience: %s", body.email, body.experience)
+    log.info("Received login request for email: %s, experience: %s", body.email, experience)
 
     try:
         _, token_pair = await login_service.authenticate(
             LoginCommand(
                 email=body.email,
                 plain_password=body.password,
-                experience=body.experience,
+                experience=experience,
             )
         )
     except InvalidCredentialsError:

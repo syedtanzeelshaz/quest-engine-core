@@ -6,12 +6,14 @@ Database sessions are managed transparently by middleware and the repository lay
 no database sessions or repositories are referenced in this layer.
 """
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends, Header, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 
 from app.api.constants import AUTH_TOKEN_URL
 from app.api.rest.constants.http_codes import HttpCode
 from app.api.rest.constants.http_messages import HttpMessage
+from app.core.context import set_current_experience
+from app.core.primitives.enums import Experience
 from app.core.primitives.exceptions import (
     InvalidTokenError,
     UserNotActiveError,
@@ -53,6 +55,28 @@ def get_token_refresh_service() -> TokenRefreshService:
 def get_current_user_service() -> CurrentUserService:
     """Provide a CurrentUserService instance."""
     return build_current_user_service()
+
+
+def get_experience_context(
+    x_experience: str | None = Header(default=None, alias="X-Experience"),
+) -> Experience:
+    """
+    Extract the target application experience from the 'X-Experience' HTTP request header.
+    Defaults to Experience.CUSTOMER if the header is omitted.
+    Stores the value in ContextVar and returns the parsed Experience.
+    """
+    if not x_experience:
+        exp = Experience.CUSTOMER
+    else:
+        try:
+            exp = Experience(x_experience.strip().upper())
+        except ValueError:
+            raise HTTPException(
+                status_code=HttpCode._400,
+                detail=f"Invalid X-Experience header. Must be one of: {[e.value for e in Experience]}",
+            )
+    set_current_experience(exp)
+    return exp
 
 
 # ──────────────────────────────────────────────
