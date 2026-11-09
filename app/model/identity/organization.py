@@ -1,14 +1,16 @@
+from __future__ import annotations
+
 from datetime import datetime
 from enum import StrEnum
 
 from sqlalchemy import (
-    TIMESTAMP,
     BigInteger,
     Identity,
     PrimaryKeyConstraint,
     SmallInteger,
     String,
     Text,
+    TIMESTAMP,
 )
 from sqlalchemy import (
     Enum as SQLEnum,

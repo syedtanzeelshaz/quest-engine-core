@@ -6,6 +6,9 @@ Pure Python dataclasses. These are the internal command/result types passed betw
 from dataclasses import dataclass
 
 
+from app.core.primitives.enums import Experience
+
+
 @dataclass(frozen=True)
 class RegisterCommand:
     """Input data for user registration."""
@@ -13,6 +16,7 @@ class RegisterCommand:
     plain_password: str
     first_name: str
     last_name: str
+    experience: Experience = Experience.CUSTOMER
 
 
 @dataclass(frozen=True)
@@ -20,6 +24,7 @@ class LoginCommand:
     """Input data for user authentication."""
     email: str
     plain_password: str
+    experience: Experience = Experience.CUSTOMER
 
 
 @dataclass(frozen=True)

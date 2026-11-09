@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.primitives.enums import Experience
 from app.model.identity.app_user import AppUser
 from app.repository.base import BaseRepository
 
@@ -15,6 +16,21 @@ class AppUserRepository(BaseRepository[AppUser]):
     async def find_by_email(self, email: str) -> AppUser | None:
         """Fetch a user by their unique email address."""
         stmt = select(AppUser).where(AppUser.email == email).limit(1)
+        return await self.session.scalar(stmt)
+
+
+    async def find_by_email_and_experience(
+        self, email: str, experience: Experience | str
+    ) -> AppUser | None:
+        """Fetch a user by email address scoped to a specific experience."""
+        stmt = (
+            select(AppUser)
+            .where(
+                AppUser.email == email,
+                AppUser.experience == experience,
+            )
+            .limit(1)
+        )
         return await self.session.scalar(stmt)
 
 

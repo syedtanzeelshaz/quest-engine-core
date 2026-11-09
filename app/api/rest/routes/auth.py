@@ -46,15 +46,16 @@ async def register(
     registration_service: RegistrationService = Depends(get_registration_service),
 ) -> RegisterResponse:
     """Register a new user account and return JWT tokens."""
-    log.info("Received registration request for email: %s", body.email)
+    log.info("Received registration request for email: %s, experience: %s", body.email, body.experience)
 
     try:
-        user, token_pair = await registration_service.register(
+        user, persona, token_pair = await registration_service.register(
             RegisterCommand(
                 email=body.email,
                 plain_password=body.password,
                 first_name=body.first_name,
                 last_name=body.last_name,
+                experience=body.experience,
             )
         )
     except EmailAlreadyExistsError:
@@ -66,8 +67,9 @@ async def register(
     return RegisterResponse(
         user_id=user.id,
         email=user.email,
-        first_name=user.first_name,
-        last_name=user.last_name,
+        first_name=persona.first_name,
+        last_name=persona.last_name,
+        experience=user.experience,
         tokens=_make_token_response(token_pair),
     )
 
@@ -78,11 +80,15 @@ async def login(
     login_service: LoginService = Depends(get_login_service),
 ) -> TokenResponse:
     """Authenticate user credentials and return JWT tokens."""
-    log.info("Received login request for email: %s", body.email)
+    log.info("Received login request for email: %s, experience: %s", body.email, body.experience)
 
     try:
         _, token_pair = await login_service.authenticate(
-            LoginCommand(email=body.email, plain_password=body.password)
+            LoginCommand(
+                email=body.email,
+                plain_password=body.password,
+                experience=body.experience,
+            )
         )
     except InvalidCredentialsError:
         raise HTTPException(

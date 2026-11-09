@@ -4,11 +4,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.model.identity.app_user import AppUser
+from app.model.identity.member import Member, MemberStatus
 from app.model.identity.organization import Organization
-from app.model.identity.organization_member import (
-    OrganizationMember,
-    OrgMemberStatus,
-)
 from app.repository.base import BaseRepository
 
 
@@ -44,11 +41,11 @@ class OrganizationRepository(BaseRepository[Organization]):
         if not org_ids:
             return []
         stmt = (
-            select(OrganizationMember.org_id, AppUser)
-            .join(AppUser, OrganizationMember.user_id == AppUser.id)
+            select(Member.org_id, AppUser)
+            .join(AppUser, Member.user_id == AppUser.id)
             .where(
-                OrganizationMember.org_id.in_(org_ids),
-                OrganizationMember.status == OrgMemberStatus.ACTIVE,
+                Member.org_id.in_(org_ids),
+                Member.status == MemberStatus.ORG_ACTIVE,
             )
         )
         result = await self.session.execute(stmt)

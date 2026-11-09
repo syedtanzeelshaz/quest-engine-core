@@ -1,18 +1,24 @@
+from __future__ import annotations
+
 from datetime import datetime
 
 from sqlalchemy import (
-    TIMESTAMP,
     BigInteger,
     Identity,
     PrimaryKeyConstraint,
     SmallInteger,
     String,
     Text,
+    TIMESTAMP,
+)
+from sqlalchemy import (
+    Enum as SQLEnum,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.audit import audited
 from app.core.database import Base
+from app.core.primitives.enums import Experience
 from app.model.base import AuditMetadataMixin
 
 
@@ -29,6 +35,7 @@ class RoleAud(Base):
     revtype: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
 
     name: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    experience: Mapped[str | None] = mapped_column(String(50), nullable=True)
     description: Mapped[str | None] = mapped_column(Text(), nullable=True)
 
     created_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
@@ -39,7 +46,7 @@ class RoleAud(Base):
 
 @audited(RoleAud)
 class Role(Base, AuditMetadataMixin):
-    """User role entity."""
+    """Unified role entity across customer and operations contexts."""
     __tablename__ = "role"
     __table_args__ = {"schema": "identity"}
 
@@ -52,5 +59,9 @@ class Role(Base, AuditMetadataMixin):
         String(50),
         unique=True,
         nullable=False,
+    )
+    experience: Mapped[Experience | None] = mapped_column(
+        SQLEnum(Experience, native_enum=False, length=50),
+        nullable=True,
     )
     description: Mapped[str | None] = mapped_column(Text(), nullable=True)

@@ -17,8 +17,10 @@ from app.core.primitives.exceptions import (
     InvalidRefreshTokenError,
     UserNotActiveError,
 )
+from app.core.primitives.enums import Experience
 from app.main import app
 from app.model.identity.app_user import AppUser, AppUserStatus
+from app.model.identity.member import Member, MemberStatus
 from app.service.authentication.models import AuthTokenPair
 
 
@@ -35,16 +37,23 @@ class TestAuthRegisterRoute:
         dummy_user = AppUser(
             id=1,
             email="test@example.com",
+            experience=Experience.CUSTOMER,
+            status=AppUserStatus.ACTIVE,
+        )
+        dummy_member = Member(
+            id=1,
+            user_id=1,
+            email="test@example.com",
             first_name="John",
             last_name="Doe",
-            status=AppUserStatus.ACTIVE,
+            status=MemberStatus.INDIVIDUAL,
         )
         dummy_tokens = AuthTokenPair(
             access_token="acc_token",
             refresh_token="ref_token",
             expires_in=900,
         )
-        mock_service.register = AsyncMock(return_value=(dummy_user, dummy_tokens))
+        mock_service.register = AsyncMock(return_value=(dummy_user, dummy_member, dummy_tokens))
         app.dependency_overrides[get_registration_service] = lambda: mock_service
 
         payload = {
@@ -59,6 +68,9 @@ class TestAuthRegisterRoute:
         data = response.json()
         assert data["email"] == "test@example.com"
         assert data["user_id"] == 1
+        assert data["first_name"] == "John"
+        assert data["last_name"] == "Doe"
+        assert data["experience"] == "CUSTOMER"
         assert data["tokens"]["access_token"] == "acc_token"
         assert data["tokens"]["refresh_token"] == "ref_token"
 
@@ -105,6 +117,28 @@ class TestAuthLoginRoute:
         data = response.json()
         assert data["access_token"] == "acc"
         assert data["refresh_token"] == "ref"
+
+
+    def test_login_with_explicit_experience_passes_to_service(self, client: TestClient) -> None:
+        mock_service = MagicMock()
+        dummy_user = AppUser(id=2, email="ops@example.com", experience=Experience.OPERATIONS, status=AppUserStatus.ACTIVE)
+        dummy_tokens = AuthTokenPair(access_token="ops_acc", refresh_token="ops_ref", expires_in=900)
+        mock_service.authenticate = AsyncMock(return_value=(dummy_user, dummy_tokens))
+        app.dependency_overrides[get_login_service] = lambda: mock_service
+
+        payload = {
+            "email": "ops@example.com",
+            "password": "validpassword",
+            "experience": "OPERATIONS",
+        }
+        response = client.post("/api/v1/auth/login", json=payload)
+
+        assert response.status_code == HttpCode._200
+        data = response.json()
+        assert data["access_token"] == "ops_acc"
+        # Verify LoginCommand was called with experience=OPERATIONS
+        called_command = mock_service.authenticate.call_args[0][0]
+        assert called_command.experience == Experience.OPERATIONS
 
 
     def test_login_invalid_credentials_returns_401(self, client: TestClient) -> None:

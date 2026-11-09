@@ -2,8 +2,12 @@ from app.repository.base import BaseRepository, Pageable, SortOrder
 from app.repository.identity import (
     AppUserRepository,
     JoinRequestRepository,
-    OrganizationMemberRepository,
+    MemberRepository,
+    MemberRoleRepository,
+    OperatorRepository,
+    OperatorRoleRepository,
     OrganizationRepository,
+    RefreshTokenRepository,
     RoleRepository,
 )
 from app.repository.tenant import (
@@ -25,9 +29,13 @@ __all__ = [
     "DatasourceRepository",
     "DatasourceSchemaObjectRepository",
     "JoinRequestRepository",
-    "OrganizationMemberRepository",
+    "MemberRepository",
+    "MemberRoleRepository",
+    "OperatorRepository",
+    "OperatorRoleRepository",
     "OrganizationRepository",
     "Pageable",
+    "RefreshTokenRepository",
     "RoleRepository",
     "SortOrder",
 ]

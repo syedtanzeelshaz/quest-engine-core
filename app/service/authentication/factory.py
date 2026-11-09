@@ -10,9 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.repository.identity.app_user_repo import AppUserRepository
-from app.repository.identity.organization_member_repo import (
-    OrganizationMemberRepository,
-)
+from app.repository.identity.member_repo import MemberRepository
+from app.repository.identity.operator_repo import OperatorRepository
 from app.repository.identity.refresh_token_repo import RefreshTokenRepository
 from app.service.authentication.current_user_service import CurrentUserService
 from app.service.authentication.login_service import LoginService
@@ -45,10 +44,11 @@ def build_login_service(session: AsyncSession | None = None) -> LoginService:
     """Construct a LoginService wired with all repository and service dependencies."""
     return LoginService(
         user_repo=AppUserRepository(session),
+        member_repo=MemberRepository(session),
+        operator_repo=OperatorRepository(session),
         refresh_token_repo=RefreshTokenRepository(session),
         password_service=_password_service,
         token_service=_token_service,
-        org_member_repo=OrganizationMemberRepository(session),
     )
 
 
@@ -56,6 +56,8 @@ def build_registration_service(session: AsyncSession | None = None) -> Registrat
     """Construct a RegistrationService wired with all repository and service dependencies."""
     return RegistrationService(
         user_repo=AppUserRepository(session),
+        member_repo=MemberRepository(session),
+        operator_repo=OperatorRepository(session),
         refresh_token_repo=RefreshTokenRepository(session),
         password_service=_password_service,
         token_service=_token_service,
@@ -66,9 +68,10 @@ def build_token_refresh_service(session: AsyncSession | None = None) -> TokenRef
     """Construct a TokenRefreshService wired with all repository and service dependencies."""
     return TokenRefreshService(
         user_repo=AppUserRepository(session),
+        member_repo=MemberRepository(session),
+        operator_repo=OperatorRepository(session),
         refresh_token_repo=RefreshTokenRepository(session),
         token_service=_token_service,
-        org_member_repo=OrganizationMemberRepository(session),
     )
 
 

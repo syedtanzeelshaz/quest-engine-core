@@ -6,6 +6,7 @@ Handles access and refresh token lifecycle at the cryptographic level only.
 Fully unit-testable in isolation.
 """
 import hashlib
+import uuid
 from datetime import UTC, datetime, timedelta
 
 from jose import JWTError, jwt
@@ -32,6 +33,7 @@ class TokenService:
         self,
         user_id: int,
         email: str,
+        experience: str | None = None,
         first_name: str | None = None,
         last_name: str | None = None,
         roles: list[str] | None = None,
@@ -44,6 +46,7 @@ class TokenService:
             Access token:
                 sub: email
                 details: { id: user_id, firstName, lastName }
+                experience: "CUSTOMER" | "OPERATIONS"
                 roles: list[str] or null (if no organization memberships)
                 type: "access"
                 iat, exp
@@ -64,10 +67,12 @@ class TokenService:
                 "firstName": first_name or "",
                 "lastName": last_name or "",
             },
+            "experience": str(experience) if experience else None,
             "roles": roles,
             "type": _ACCESS_TOKEN_TYPE,
             "iat": now,
             "exp": now + access_expire,
+            "jti": uuid.uuid4().hex,
         }
 
         refresh_payload = {
@@ -76,6 +81,7 @@ class TokenService:
             "type": _REFRESH_TOKEN_TYPE,
             "iat": now,
             "exp": now + refresh_expire,
+            "jti": uuid.uuid4().hex,
         }
 
         access_token = jwt.encode(access_payload, self._secret, algorithm=self._algorithm)

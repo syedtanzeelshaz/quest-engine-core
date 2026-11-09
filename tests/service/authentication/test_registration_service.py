@@ -3,10 +3,15 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from app.core.primitives.enums import Experience
 from app.core.primitives.exceptions import EmailAlreadyExistsError
 from app.model.identity.app_user import AppUser, AppUserStatus
+from app.model.identity.member import Member, MemberStatus
+from app.model.identity.operator import Operator
 from app.model.identity.refresh_token import RefreshToken
 from app.repository.identity.app_user_repo import AppUserRepository
+from app.repository.identity.member_repo import MemberRepository
+from app.repository.identity.operator_repo import OperatorRepository
 from app.repository.identity.refresh_token_repo import RefreshTokenRepository
 from app.service.authentication.models import AuthTokenPair, RegisterCommand
 from app.service.authentication.password import PasswordService
@@ -22,6 +27,12 @@ class TestRegistrationService:
         self.mock_user_repo = MagicMock(spec=AppUserRepository)
         self.mock_user_repo.session = self.mock_session
 
+        self.mock_member_repo = MagicMock(spec=MemberRepository)
+        self.mock_member_repo.session = self.mock_session
+
+        self.mock_operator_repo = MagicMock(spec=OperatorRepository)
+        self.mock_operator_repo.session = self.mock_session
+
         self.mock_refresh_token_repo = MagicMock(spec=RefreshTokenRepository)
         self.mock_refresh_token_repo.session = self.mock_session
 
@@ -30,6 +41,8 @@ class TestRegistrationService:
 
         self.service = RegistrationService(
             user_repo=self.mock_user_repo,
+            member_repo=self.mock_member_repo,
+            operator_repo=self.mock_operator_repo,
             refresh_token_repo=self.mock_refresh_token_repo,
             password_service=self.mock_password_service,
             token_service=self.mock_token_service,
@@ -40,15 +53,24 @@ class TestRegistrationService:
             plain_password="StrongPassword123!",
             first_name="Bob",
             last_name="Builder",
+            experience=Experience.CUSTOMER,
         )
 
         self.dummy_saved_user = AppUser(
             id=10,
             email="newuser@example.com",
             password_hash="$2b$12$hashedpwd",
+            experience=Experience.CUSTOMER,
+            status=AppUserStatus.ACTIVE,
+        )
+
+        self.dummy_saved_member = Member(
+            id=1,
+            user_id=10,
+            email="newuser@example.com",
             first_name="Bob",
             last_name="Builder",
-            status=AppUserStatus.ACTIVE,
+            status=MemberStatus.INDIVIDUAL,
         )
 
         self.dummy_tokens = AuthTokenPair(
@@ -63,13 +85,15 @@ class TestRegistrationService:
         self.mock_user_repo.exists_by_email.return_value = False
         self.mock_password_service.hash.return_value = "$2b$12$hashedpwd"
         self.mock_user_repo.save_and_flush.return_value = self.dummy_saved_user
+        self.mock_member_repo.save_and_flush.return_value = self.dummy_saved_member
         self.mock_token_service.issue_pair.return_value = self.dummy_tokens
         self.mock_token_service.hash_token.return_value = "hashed_refresh_token"
         self.mock_token_service.refresh_token_expires_at.return_value = datetime(2026, 10, 1, tzinfo=UTC)
 
-        user, tokens = await self.service.register(self.dummy_command)
+        user, persona, tokens = await self.service.register(self.dummy_command)
 
         assert user == self.dummy_saved_user
+        assert persona == self.dummy_saved_member
         assert tokens == self.dummy_tokens
 
         # Check user uniqueness check and creation
@@ -80,6 +104,14 @@ class TestRegistrationService:
         assert saved_user.email == "newuser@example.com"
         assert saved_user.password_hash == "$2b$12$hashedpwd"
         assert saved_user.status == AppUserStatus.ACTIVE
+
+        # Check persona creation
+        self.mock_member_repo.save_and_flush.assert_called_once()
+        saved_member: Member = self.mock_member_repo.save_and_flush.call_args[0][0]
+        assert saved_member.user_id == 10
+        assert saved_member.first_name == "Bob"
+        assert saved_member.last_name == "Builder"
+        assert saved_member.status == MemberStatus.INDIVIDUAL
 
         # Check refresh token persistence
         self.mock_refresh_token_repo.save_and_flush.assert_called_once()

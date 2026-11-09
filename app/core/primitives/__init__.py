@@ -7,6 +7,7 @@ from app.core.primitives.constants import (
     SecurityMessage,
     UserMessage,
 )
+from app.core.primitives.enums import Experience
 from app.core.primitives.exceptions import (
     AccessDeniedError,
     AuthenticationRequiredError,
@@ -27,6 +28,7 @@ __all__ = [
     "AuthenticationRequiredError",
     "DatasourceMessage",
     "EmailAlreadyExistsError",
+    "Experience",
     "InvalidCredentialsError",
     "InvalidInputError",
     "InvalidRefreshTokenError",

@@ -3,13 +3,15 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from app.core.primitives.enums import Experience
 from app.core.primitives.exceptions import InvalidRefreshTokenError
 from app.model.identity.app_user import AppUser, AppUserStatus
+from app.model.identity.member import Member, MemberStatus
+from app.model.identity.operator import Operator
 from app.model.identity.refresh_token import RefreshToken
 from app.repository.identity.app_user_repo import AppUserRepository
-from app.repository.identity.organization_member_repo import (
-    OrganizationMemberRepository,
-)
+from app.repository.identity.member_repo import MemberRepository
+from app.repository.identity.operator_repo import OperatorRepository
 from app.repository.identity.refresh_token_repo import RefreshTokenRepository
 from app.service.authentication.models import AuthTokenPair
 from app.service.authentication.token import TokenService
@@ -24,25 +26,40 @@ class TestTokenRefreshServiceRefresh:
         self.mock_user_repo = MagicMock(spec=AppUserRepository)
         self.mock_user_repo.session = self.mock_session
 
+        self.mock_member_repo = MagicMock(spec=MemberRepository)
+        self.mock_member_repo.session = self.mock_session
+
+        self.mock_operator_repo = MagicMock(spec=OperatorRepository)
+        self.mock_operator_repo.session = self.mock_session
+
         self.mock_refresh_token_repo = MagicMock(spec=RefreshTokenRepository)
         self.mock_refresh_token_repo.session = self.mock_session
 
         self.mock_token_service = MagicMock(spec=TokenService)
-        self.mock_org_member_repo = MagicMock(spec=OrganizationMemberRepository)
-        self.mock_org_member_repo.session = self.mock_session
 
         self.service = TokenRefreshService(
             user_repo=self.mock_user_repo,
+            member_repo=self.mock_member_repo,
+            operator_repo=self.mock_operator_repo,
             refresh_token_repo=self.mock_refresh_token_repo,
             token_service=self.mock_token_service,
-            org_member_repo=self.mock_org_member_repo,
         )
 
         self.dummy_user = AppUser(
             id=7,
             email="refresh@example.com",
             password_hash="$2b$12$hash",
+            experience=Experience.CUSTOMER,
             status=AppUserStatus.ACTIVE,
+        )
+
+        self.dummy_member = Member(
+            id=1,
+            user_id=7,
+            email="refresh@example.com",
+            first_name="Alice",
+            last_name="Smith",
+            status=MemberStatus.INDIVIDUAL,
         )
 
         self.dummy_stored_token = RefreshToken(
@@ -67,7 +84,8 @@ class TestTokenRefreshServiceRefresh:
         self.mock_token_service.hash_token.side_effect = lambda t: f"hash_of_{t}"
         self.mock_refresh_token_repo.find_by_token_hash.return_value = self.dummy_stored_token
         self.mock_user_repo.find_by_id.return_value = self.dummy_user
-        self.mock_org_member_repo.find_roles_by_user.return_value = ["ENGINEER"]
+        self.mock_member_repo.find_by_user_id.return_value = self.dummy_member
+        self.mock_member_repo.find_roles_by_user_id.return_value = ["ENGINEER"]
         self.mock_token_service.issue_pair.return_value = self.dummy_new_tokens
         self.mock_token_service.refresh_token_expires_at.return_value = datetime(2027, 1, 1, tzinfo=UTC)
 
@@ -83,8 +101,9 @@ class TestTokenRefreshServiceRefresh:
         self.mock_token_service.issue_pair.assert_called_once_with(
             user_id=7,
             email="refresh@example.com",
-            first_name=self.dummy_user.first_name,
-            last_name=self.dummy_user.last_name,
+            experience=self.dummy_user.experience,
+            first_name="Alice",
+            last_name="Smith",
             roles=["ENGINEER"],
         )
 
@@ -129,18 +148,23 @@ class TestTokenRefreshServiceRevoke:
         self.mock_user_repo = MagicMock(spec=AppUserRepository)
         self.mock_user_repo.session = self.mock_session
 
+        self.mock_member_repo = MagicMock(spec=MemberRepository)
+        self.mock_member_repo.session = self.mock_session
+
+        self.mock_operator_repo = MagicMock(spec=OperatorRepository)
+        self.mock_operator_repo.session = self.mock_session
+
         self.mock_refresh_token_repo = MagicMock(spec=RefreshTokenRepository)
         self.mock_refresh_token_repo.session = self.mock_session
 
         self.mock_token_service = MagicMock(spec=TokenService)
-        self.mock_org_member_repo = MagicMock(spec=OrganizationMemberRepository)
-        self.mock_org_member_repo.session = self.mock_session
 
         self.service = TokenRefreshService(
             user_repo=self.mock_user_repo,
+            member_repo=self.mock_member_repo,
+            operator_repo=self.mock_operator_repo,
             refresh_token_repo=self.mock_refresh_token_repo,
             token_service=self.mock_token_service,
-            org_member_repo=self.mock_org_member_repo,
         )
 
 

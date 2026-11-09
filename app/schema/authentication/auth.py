@@ -1,5 +1,7 @@
 from pydantic import BaseModel, EmailStr, field_validator
 
+from app.core.primitives.enums import Experience
+
 
 class RegisterRequest(BaseModel):
     """Request body for user registration."""
@@ -7,6 +9,7 @@ class RegisterRequest(BaseModel):
     password: str
     first_name: str
     last_name: str
+    experience: Experience = Experience.CUSTOMER
 
 
     @field_validator("password")
@@ -31,6 +34,7 @@ class LoginRequest(BaseModel):
     """Request body for user login."""
     email: EmailStr
     password: str
+    experience: Experience = Experience.CUSTOMER
 
 
 class RefreshRequest(BaseModel):
@@ -57,6 +61,7 @@ class RegisterResponse(BaseModel):
     email: str
     first_name: str | None
     last_name: str | None
+    experience: Experience
     tokens: TokenResponse
 
 

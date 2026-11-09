@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import datetime
 from enum import StrEnum
 from typing import Any
@@ -121,7 +123,7 @@ class Datasource(Base, AuditMetadataMixin):
     )
     reviewed_by: Mapped[int | None] = mapped_column(
         BigInteger,
-        ForeignKey("identity.app_user.id", ondelete="SET NULL"),
+        ForeignKey("identity.member.id", ondelete="SET NULL"),
         nullable=True,
     )
     reviewed_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)

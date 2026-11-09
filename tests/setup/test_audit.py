@@ -26,7 +26,6 @@ def test_audit_lifecycle_flow():
         id=101,
         email="alice@example.com",
         password_hash="secret_hash",
-        first_name="Alice",
     )
     session.new = [user]
     session.dirty = []
