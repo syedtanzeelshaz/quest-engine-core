@@ -58,22 +58,24 @@ def get_current_user_service() -> CurrentUserService:
 
 
 def get_experience_context(
-    x_experience: str | None = Header(default=None, alias="X-Experience"),
+    experience_header: str | None = Header(default=None, alias="Experience"),
+    x_experience_header: str | None = Header(default=None, alias="X-Experience"),
 ) -> Experience:
     """
-    Extract the target application experience from the 'X-Experience' HTTP request header.
+    Extract the target application experience from the 'Experience' or 'X-Experience' HTTP request header.
     Defaults to Experience.CUSTOMER if the header is omitted.
     Stores the value in ContextVar and returns the parsed Experience.
     """
-    if not x_experience:
+    raw = experience_header or x_experience_header
+    if not raw:
         exp = Experience.CUSTOMER
     else:
         try:
-            exp = Experience(x_experience.strip().upper())
+            exp = Experience(raw.strip().upper())
         except ValueError:
             raise HTTPException(
                 status_code=HttpCode._400,
-                detail=f"Invalid X-Experience header. Must be one of: {[e.value for e in Experience]}",
+                detail=f"Invalid Experience header. Must be one of: {[e.value for e in Experience]}",
             )
     set_current_experience(exp)
     return exp
