@@ -19,10 +19,7 @@ from app.core.primitives.exceptions import (
     UserNotActiveError,
     UserNotFoundError,
 )
-from app.model.identity.app_user import AppUser
-from app.service.authentication.current_user_service import CurrentUserService
 from app.service.authentication.factory import (
-    build_current_user_service,
     build_login_service,
     build_registration_service,
     build_token_refresh_service,
@@ -30,6 +27,7 @@ from app.service.authentication.factory import (
 from app.service.authentication.login_service import LoginService
 from app.service.authentication.registration_service import RegistrationService
 from app.service.authentication.token_refresh_service import TokenRefreshService
+from app.service.user import CurrentUser, CurrentUserService, build_current_user_service
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=AUTH_TOKEN_URL)
 
@@ -63,13 +61,13 @@ def get_current_user_service() -> CurrentUserService:
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
     current_user_service: CurrentUserService = Depends(get_current_user_service),
-) -> AppUser:
+) -> CurrentUser:
     """
     REST FastAPI dependency — extracts the Bearer token from the Authorization header,
-    validates the JWT, and fetches the active AppUser via CurrentUserService.
+    validates the JWT, and fetches the active CurrentUser context via CurrentUserService.
 
     Inject into protected routes:
-        current_user: AppUser = Depends(get_current_user)
+        current_user: CurrentUser = Depends(get_current_user)
 
     Raises:
         HTTPException(401): if the token is invalid, expired, or user is not found.

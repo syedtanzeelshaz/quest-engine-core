@@ -22,6 +22,7 @@ from app.main import app
 from app.model.identity.app_user import AppUser, AppUserStatus
 from app.model.identity.member import Member, MemberStatus
 from app.service.authentication.models import AuthTokenPair
+from app.service.user.models import CurrentUser
 
 
 @pytest.fixture
@@ -367,7 +368,12 @@ class TestAuthLogoutRoute:
         mock_service.revoke = AsyncMock(return_value=None)
         app.dependency_overrides[get_token_refresh_service] = lambda: mock_service
 
-        dummy_current_user = AppUser(id=1, email="user@example.com", status=AppUserStatus.ACTIVE)
+        dummy_current_user = CurrentUser(
+            id=1,
+            email="user@example.com",
+            experience=Experience.CUSTOMER,
+            status=AppUserStatus.ACTIVE,
+        )
         app.dependency_overrides[get_current_user] = lambda: dummy_current_user
 
         payload = {"refresh_token": "token_to_revoke"}

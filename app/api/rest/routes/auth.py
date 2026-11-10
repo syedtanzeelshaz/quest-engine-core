@@ -16,7 +16,7 @@ from app.core.primitives.exceptions import (
     InvalidRefreshTokenError,
     UserNotActiveError,
 )
-from app.model.identity.app_user import AppUser
+from app.service.user.models import CurrentUser
 from app.schema.authentication.auth import (
     LoginRequest,
     LogoutRequest,
@@ -131,7 +131,7 @@ async def refresh_token(
 async def logout(
     body: LogoutRequest,
     token_refresh_service: TokenRefreshService = Depends(get_token_refresh_service),
-    current_user: AppUser = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
 ) -> dict:
     """
     Revoke the provided refresh token (logout).

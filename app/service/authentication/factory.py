@@ -13,7 +13,6 @@ from app.repository.identity.app_user_repo import AppUserRepository
 from app.repository.identity.member_repo import MemberRepository
 from app.repository.identity.operator_repo import OperatorRepository
 from app.repository.identity.refresh_token_repo import RefreshTokenRepository
-from app.service.authentication.current_user_service import CurrentUserService
 from app.service.authentication.login_service import LoginService
 from app.service.authentication.password import PasswordService
 from app.service.authentication.registration_service import RegistrationService
@@ -71,13 +70,5 @@ def build_token_refresh_service(session: AsyncSession | None = None) -> TokenRef
         member_repo=MemberRepository(session),
         operator_repo=OperatorRepository(session),
         refresh_token_repo=RefreshTokenRepository(session),
-        token_service=_token_service,
-    )
-
-
-def build_current_user_service(session: AsyncSession | None = None) -> CurrentUserService:
-    """Construct a CurrentUserService wired with repository and token dependencies."""
-    return CurrentUserService(
-        user_repo=AppUserRepository(session),
         token_service=_token_service,
     )
