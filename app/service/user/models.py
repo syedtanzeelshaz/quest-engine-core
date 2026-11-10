@@ -36,38 +36,44 @@ class CurrentUser:
     roles: list[str] = field(default_factory=list)
     scopes: UserScopes = field(default_factory=UserScopes)
 
+
     @property
     def full_name(self) -> str:
         """Formatted full name of the user."""
         return f"{self.first_name or ''} {self.last_name or ''}".strip()
+
 
     @property
     def is_active(self) -> bool:
         """Check if user account status is ACTIVE."""
         return self.status == AppUserStatus.ACTIVE
 
+
     @property
     def is_operations(self) -> bool:
         """Check if user experience is OPERATIONS."""
         return self.experience == Experience.OPERATIONS
+
 
     @property
     def is_customer(self) -> bool:
         """Check if user experience is CUSTOMER."""
         return self.experience == Experience.CUSTOMER
 
+
     @property
     def org_id(self) -> int | None:
         """Convenience accessor for organization ID from scopes."""
         return self.scopes.org_id
+
 
     @property
     def member_id(self) -> int | None:
         """Convenience accessor for member ID from scopes."""
         return self.scopes.member_id
 
+
     @property
     def operator_id(self) -> int | None:
         """Convenience accessor for operator ID from scopes."""
         return self.scopes.operator_id
-
