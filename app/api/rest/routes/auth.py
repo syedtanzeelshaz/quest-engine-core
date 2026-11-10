@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 
+from app.api.deps import get_experience_context
 from app.api.rest.constants.http_codes import HttpCode
 from app.api.rest.constants.http_messages import HttpMessage
 from app.api.rest.deps import (
     get_current_user,
-    get_experience_context,
     get_login_service,
     get_registration_service,
     get_token_refresh_service,
@@ -55,7 +55,7 @@ async def register(
         user, persona, token_pair = await registration_service.register(
             RegisterCommand(
                 email=body.email,
-                plain_password=body.password,
+                plain_password=body.password.get_secret_value(),
                 first_name=body.first_name,
                 last_name=body.last_name,
                 experience=experience,
@@ -90,7 +90,7 @@ async def login(
         _, token_pair = await login_service.authenticate(
             LoginCommand(
                 email=body.email,
-                plain_password=body.password,
+                plain_password=body.password.get_secret_value(),
                 experience=experience,
             )
         )

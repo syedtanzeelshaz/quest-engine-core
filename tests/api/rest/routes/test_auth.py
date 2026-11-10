@@ -59,6 +59,7 @@ class TestAuthRegisterRoute:
         payload = {
             "email": "test@example.com",
             "password": "Password123!",
+            "confirm_password": "Password123!",
             "first_name": "John",
             "last_name": "Doe",
         }
@@ -97,6 +98,7 @@ class TestAuthRegisterRoute:
         payload = {
             "email": "ops@example.com",
             "password": "Password123!",
+            "confirm_password": "Password123!",
             "first_name": "Jane",
             "last_name": "Admin",
         }
@@ -133,6 +135,7 @@ class TestAuthRegisterRoute:
         payload = {
             "email": "ops2@example.com",
             "password": "Password123!",
+            "confirm_password": "Password123!",
             "first_name": "Jane",
             "last_name": "Admin",
         }
@@ -155,6 +158,7 @@ class TestAuthRegisterRoute:
         payload = {
             "email": "existing@example.com",
             "password": "Password123!",
+            "confirm_password": "Password123!",
             "first_name": "Jane",
             "last_name": "Doe",
         }
@@ -168,10 +172,88 @@ class TestAuthRegisterRoute:
         payload = {
             "email": "not-an-email",
             "password": "Password123!",
+            "confirm_password": "Password123!",
+            "first_name": "Jane",
+            "last_name": "Doe",
         }
         response = client.post("/api/v1/auth/register", json=payload)
 
         assert response.status_code == HttpCode._422
+
+
+    def test_register_password_mismatch_returns_422(self, client: TestClient) -> None:
+        payload = {
+            "email": "mismatch@example.com",
+            "password": "Password123!",
+            "confirm_password": "DifferentPassword456!",
+            "first_name": "Jane",
+            "last_name": "Doe",
+        }
+        response = client.post("/api/v1/auth/register", json=payload)
+
+        assert response.status_code == HttpCode._422
+        assert "Passwords do not match" in response.text
+        # Verify plaintext passwords are NEVER present anywhere in the 422 error response
+        assert "Password123!" not in response.text
+        assert "DifferentPassword456!" not in response.text
+        # Verify 'input' field is stripped from all validation errors
+        for error in response.json()["detail"]:
+            assert "input" not in error
+
+
+    def test_register_missing_confirm_password_returns_422(self, client: TestClient) -> None:
+        payload = {
+            "email": "missing@example.com",
+            "password": "Password123!",
+            "first_name": "Jane",
+            "last_name": "Doe",
+        }
+        response = client.post("/api/v1/auth/register", json=payload)
+
+        assert response.status_code == HttpCode._422
+
+    @pytest.mark.parametrize(
+        ("invalid_password", "expected_msg_fragment"),
+        [
+            ("Short1!", "at least 8 characters long"),
+            ("A" * 65 + "1!a", "cannot exceed 64 characters"),
+            ("password123!", "at least one uppercase letter"),
+            ("PASSWORD123!", "at least one lowercase letter"),
+            ("Password!!!!", "at least one digit"),
+            ("Password1234", "at least one special character"),
+        ],
+    )
+    def test_register_password_complexity_validations(
+        self, client: TestClient, invalid_password: str, expected_msg_fragment: str
+    ) -> None:
+        payload = {
+            "email": "complexity@example.com",
+            "password": invalid_password,
+            "confirm_password": invalid_password,
+            "first_name": "Jane",
+            "last_name": "Doe",
+        }
+        response = client.post("/api/v1/auth/register", json=payload)
+
+        assert response.status_code == HttpCode._422
+        assert expected_msg_fragment in response.text
+
+    @pytest.mark.parametrize("field_name", ["first_name", "last_name"])
+    def test_register_name_exceeding_100_chars_returns_422(
+        self, client: TestClient, field_name: str
+    ) -> None:
+        payload = {
+            "email": "namelimit@example.com",
+            "password": "Password123!",
+            "confirm_password": "Password123!",
+            "first_name": "Jane",
+            "last_name": "Doe",
+        }
+        payload[field_name] = "A" * 101
+        response = client.post("/api/v1/auth/register", json=payload)
+
+        assert response.status_code == HttpCode._422
+        assert "cannot exceed 100 characters" in response.text
 
 
 class TestAuthLoginRoute:
