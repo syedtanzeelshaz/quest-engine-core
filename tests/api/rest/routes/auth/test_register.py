@@ -5,24 +5,13 @@ from fastapi.testclient import TestClient
 
 from app.api.rest.constants.http_codes import HttpCode
 from app.api.rest.constants.http_messages import HttpMessage
-from app.api.rest.deps import (
-    get_current_user,
-    get_login_service,
-    get_registration_service,
-    get_token_refresh_service,
-)
-from app.core.primitives.exceptions import (
-    EmailAlreadyExistsError,
-    InvalidCredentialsError,
-    InvalidRefreshTokenError,
-    UserNotActiveError,
-)
+from app.api.rest.deps import get_registration_service
 from app.core.primitives.enums import Experience
+from app.core.primitives.exceptions import EmailAlreadyExistsError
 from app.main import app
 from app.model.identity.app_user import AppUser, AppUserStatus
 from app.model.identity.member import Member, MemberStatus
 from app.service.authentication.models import AuthTokenPair
-from app.service.user.models import CurrentUser
 
 
 @pytest.fixture
@@ -213,6 +202,7 @@ class TestAuthRegisterRoute:
 
         assert response.status_code == HttpCode._422
 
+
     @pytest.mark.parametrize(
         ("invalid_password", "expected_msg_fragment"),
         [
@@ -239,6 +229,7 @@ class TestAuthRegisterRoute:
         assert response.status_code == HttpCode._422
         assert expected_msg_fragment in response.text
 
+
     @pytest.mark.parametrize("field_name", ["first_name", "last_name"])
     def test_register_name_exceeding_100_chars_returns_422(
         self, client: TestClient, field_name: str
@@ -255,138 +246,3 @@ class TestAuthRegisterRoute:
 
         assert response.status_code == HttpCode._422
         assert "cannot exceed 100 characters" in response.text
-
-
-class TestAuthLoginRoute:
-    def test_login_success_returns_200(self, client: TestClient) -> None:
-        mock_service = MagicMock()
-        dummy_user = AppUser(id=1, email="user@example.com", status=AppUserStatus.ACTIVE)
-        dummy_tokens = AuthTokenPair(access_token="acc", refresh_token="ref", expires_in=900)
-        mock_service.authenticate = AsyncMock(return_value=(dummy_user, dummy_tokens))
-        app.dependency_overrides[get_login_service] = lambda: mock_service
-
-        payload = {"email": "user@example.com", "password": "validpassword"}
-        response = client.post("/api/v1/auth/login", json=payload)
-
-        assert response.status_code == HttpCode._200
-        data = response.json()
-        assert data["access_token"] == "acc"
-        assert data["refresh_token"] == "ref"
-
-
-    def test_login_with_explicit_experience_passes_to_service(self, client: TestClient) -> None:
-        mock_service = MagicMock()
-        dummy_user = AppUser(id=2, email="ops@example.com", experience=Experience.OPERATIONS, status=AppUserStatus.ACTIVE)
-        dummy_tokens = AuthTokenPair(access_token="ops_acc", refresh_token="ops_ref", expires_in=900)
-        mock_service.authenticate = AsyncMock(return_value=(dummy_user, dummy_tokens))
-        app.dependency_overrides[get_login_service] = lambda: mock_service
-
-        payload = {
-            "email": "ops@example.com",
-            "password": "validpassword",
-        }
-        response = client.post(
-            "/api/v1/auth/login",
-            json=payload,
-            headers={"X-Experience": "OPERATIONS"},
-        )
-
-        assert response.status_code == HttpCode._200
-        data = response.json()
-        assert data["access_token"] == "ops_acc"
-        # Verify LoginCommand was called with experience=OPERATIONS from header
-        called_command = mock_service.authenticate.call_args[0][0]
-        assert called_command.experience == Experience.OPERATIONS
-
-
-    def test_login_with_invalid_experience_header_returns_400(self, client: TestClient) -> None:
-        payload = {"email": "user@example.com", "password": "validpassword"}
-        response = client.post(
-            "/api/v1/auth/login",
-            json=payload,
-            headers={"X-Experience": "INVALID_EXP"},
-        )
-
-        assert response.status_code == HttpCode._400
-
-
-    def test_login_invalid_credentials_returns_401(self, client: TestClient) -> None:
-        mock_service = MagicMock()
-        mock_service.authenticate = AsyncMock(side_effect=InvalidCredentialsError("Invalid credentials"))
-        app.dependency_overrides[get_login_service] = lambda: mock_service
-
-        payload = {"email": "user@example.com", "password": "wrongpassword"}
-        response = client.post("/api/v1/auth/login", json=payload)
-
-        assert response.status_code == HttpCode._401
-        assert response.json()["detail"] == HttpMessage.INVALID_CREDENTIALS
-
-
-    def test_login_inactive_account_returns_403(self, client: TestClient) -> None:
-        mock_service = MagicMock()
-        mock_service.authenticate = AsyncMock(side_effect=UserNotActiveError("Not active"))
-        app.dependency_overrides[get_login_service] = lambda: mock_service
-
-        payload = {"email": "user@example.com", "password": "password"}
-        response = client.post("/api/v1/auth/login", json=payload)
-
-        assert response.status_code == HttpCode._403
-        assert response.json()["detail"] == HttpMessage.ACCOUNT_NOT_ACTIVE
-
-
-class TestAuthRefreshRoute:
-    def test_refresh_success_returns_200(self, client: TestClient) -> None:
-        mock_service = MagicMock()
-        dummy_tokens = AuthTokenPair(access_token="new_acc", refresh_token="new_ref", expires_in=900)
-        mock_service.refresh = AsyncMock(return_value=dummy_tokens)
-        app.dependency_overrides[get_token_refresh_service] = lambda: mock_service
-
-        payload = {"refresh_token": "valid_refresh_token"}
-        response = client.post("/api/v1/auth/refresh", json=payload)
-
-        assert response.status_code == HttpCode._200
-        data = response.json()
-        assert data["access_token"] == "new_acc"
-        assert data["refresh_token"] == "new_ref"
-
-
-    def test_refresh_invalid_token_returns_401(self, client: TestClient) -> None:
-        mock_service = MagicMock()
-        mock_service.refresh = AsyncMock(side_effect=InvalidRefreshTokenError("Invalid or expired"))
-        app.dependency_overrides[get_token_refresh_service] = lambda: mock_service
-
-        payload = {"refresh_token": "invalid_refresh_token"}
-        response = client.post("/api/v1/auth/refresh", json=payload)
-
-        assert response.status_code == HttpCode._401
-        assert response.json()["detail"] == HttpMessage.INVALID_REFRESH_TOKEN
-
-
-class TestAuthLogoutRoute:
-    def test_logout_success_returns_200(self, client: TestClient) -> None:
-        mock_service = MagicMock()
-        mock_service.revoke = AsyncMock(return_value=None)
-        app.dependency_overrides[get_token_refresh_service] = lambda: mock_service
-
-        dummy_current_user = CurrentUser(
-            id=1,
-            email="user@example.com",
-            experience=Experience.CUSTOMER,
-            status=AppUserStatus.ACTIVE,
-        )
-        app.dependency_overrides[get_current_user] = lambda: dummy_current_user
-
-        payload = {"refresh_token": "token_to_revoke"}
-        response = client.post("/api/v1/auth/logout", json=payload)
-
-        assert response.status_code == HttpCode._200
-        assert response.json()["message"] == HttpMessage.LOGOUT_SUCCESSFUL
-        mock_service.revoke.assert_called_once_with("token_to_revoke", requesting_user_id=1)
-
-
-    def test_logout_unauthenticated_returns_401(self, client: TestClient) -> None:
-        # Without overriding get_current_user or providing Authorization header
-        payload = {"refresh_token": "token_to_revoke"}
-        response = client.post("/api/v1/auth/logout", json=payload)
-
-        assert response.status_code == HttpCode._401

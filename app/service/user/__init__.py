@@ -3,8 +3,8 @@ from app.service.user.factory import build_current_user_service
 from app.service.user.models import CurrentUser, UserScopes
 
 __all__ = [
-    "CurrentUserService",
     "CurrentUser",
+    "CurrentUserService",
     "UserScopes",
     "build_current_user_service",
 ]
