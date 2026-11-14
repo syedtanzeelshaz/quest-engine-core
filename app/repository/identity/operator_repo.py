@@ -1,7 +1,8 @@
+from registry.enums import OperatorStatus
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.model.identity.operator import Operator, OperatorStatus
+from app.model.identity.operator import Operator
 from app.model.identity.operator_role import OperatorRole
 from app.model.identity.role import Role
 from app.repository.base import BaseRepository

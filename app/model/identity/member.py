@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from enum import StrEnum
 
+from registry.enums import MemberStatus
 from sqlalchemy import (
     BigInteger,
     Date,
@@ -26,13 +26,6 @@ from app.model.base import AuditMetadataMixin
 from app.model.identity.app_user import AppUser
 from app.model.identity.organization import Organization
 from app.model.identity.role import Role
-
-
-class MemberStatus(StrEnum):
-    INDIVIDUAL = "INDIVIDUAL"
-    ORG_ACTIVE = "ORG_ACTIVE"
-    ORG_SUSPENDED = "ORG_SUSPENDED"
-    ORG_OFFBOARDED = "ORG_OFFBOARDED"
 
 
 class MemberAud(Base):

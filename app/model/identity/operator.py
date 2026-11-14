@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import StrEnum
 
+from registry.enums import OperatorStatus
 from sqlalchemy import (
     BigInteger,
     ForeignKey,
@@ -22,13 +22,6 @@ from app.core.database import Base
 from app.model.base import AuditMetadataMixin
 from app.model.identity.app_user import AppUser
 from app.model.identity.role import Role
-
-
-class OperatorStatus(StrEnum):
-    INVITED = "INVITED"
-    ACTIVE = "ACTIVE"
-    SUSPENDED = "SUSPENDED"
-    OFFBOARDED = "OFFBOARDED"
 
 
 class OperatorAud(Base):

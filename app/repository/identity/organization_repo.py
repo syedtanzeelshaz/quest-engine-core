@@ -1,10 +1,11 @@
 from collections.abc import Sequence
 
+from registry.enums import MemberStatus
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.model.identity.app_user import AppUser
-from app.model.identity.member import Member, MemberStatus
+from app.model.identity.member import Member
 from app.model.identity.organization import Organization
 from app.repository.base import BaseRepository
 

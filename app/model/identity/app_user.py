@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import StrEnum
 
+from registry.enums import UserStatus
 from sqlalchemy import (
     BigInteger,
     Identity,
@@ -20,13 +20,6 @@ from app.core.audit import audited
 from app.core.database import Base
 from app.core.primitives.enums import Experience
 from app.model.base import AuditMetadataMixin
-
-
-class AppUserStatus(StrEnum):
-    ACTIVE = "ACTIVE"
-    DELETED = "DELETED"
-    INACTIVE = "INACTIVE"
-    SUSPENDED = "SUSPENDED"
 
 
 class AppUserAud(Base):
@@ -77,8 +70,8 @@ class AppUser(Base, AuditMetadataMixin):
         nullable=True,
         default=Experience.CUSTOMER,
     )
-    status: Mapped[AppUserStatus | None] = mapped_column(
-        SQLEnum(AppUserStatus, native_enum=False, length=50),
+    status: Mapped[UserStatus | None] = mapped_column(
+        SQLEnum(UserStatus, native_enum=False, length=50),
         nullable=True,
-        default=AppUserStatus.ACTIVE,
+        default=UserStatus.ACTIVE,
     )

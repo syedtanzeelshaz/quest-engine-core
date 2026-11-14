@@ -1,7 +1,8 @@
+from registry.enums import MemberStatus
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.model.identity.member import Member, MemberStatus
+from app.model.identity.member import Member
 from app.model.identity.member_role import MemberRole
 from app.model.identity.role import Role
 from app.repository.base import BaseRepository

@@ -4,12 +4,14 @@ RegistrationService — user registration orchestration.
 Coordinates email uniqueness check, password hashing, user creation,
 member persona provisioning (INDIVIDUAL status), and initial JWT token pair issuance.
 """
+from registry.enums import MemberStatus, OperatorStatus, UserStatus
+
 from app.core.primitives.enums import Experience
 from app.core.primitives.exceptions import EmailAlreadyExistsError
 from app.core.transaction import transactional
-from app.model.identity.app_user import AppUser, AppUserStatus
-from app.model.identity.member import Member, MemberStatus
-from app.model.identity.operator import Operator, OperatorStatus
+from app.model.identity.app_user import AppUser
+from app.model.identity.member import Member
+from app.model.identity.operator import Operator
 from app.model.identity.refresh_token import RefreshToken
 from app.repository.identity.app_user_repo import AppUserRepository
 from app.repository.identity.member_repo import MemberRepository
@@ -72,7 +74,7 @@ class RegistrationService:
             email=command.email,
             password_hash=password_hash,
             experience=command.experience,
-            status=AppUserStatus.ACTIVE,
+            status=UserStatus.ACTIVE,
         )
         user = await self._user_repo.save_and_flush(user)
 

@@ -7,10 +7,11 @@ Handles the full lifecycle of persisted refresh tokens:
 """
 from datetime import UTC, datetime
 
+from registry.enums import UserStatus
+
 from app.core.primitives.enums import Experience
 from app.core.primitives.exceptions import InvalidRefreshTokenError
 from app.core.transaction import transactional
-from app.model.identity.app_user import AppUserStatus
 from app.model.identity.refresh_token import RefreshToken
 from app.repository.identity.app_user_repo import AppUserRepository
 from app.repository.identity.member_repo import MemberRepository
@@ -74,7 +75,7 @@ class TokenRefreshService:
 
         # 3. Verify user is active
         user = await self._user_repo.find_by_id(user_id)
-        if user is None or user.status != AppUserStatus.ACTIVE:
+        if user is None or user.status != UserStatus.ACTIVE:
             raise InvalidRefreshTokenError("User account is inactive or not found.")
 
         # 4. Revoke old token (rotation)

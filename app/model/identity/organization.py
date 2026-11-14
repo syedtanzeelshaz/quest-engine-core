@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import StrEnum
 
+from registry.enums import OrganizationStatus
 from sqlalchemy import (
     BigInteger,
     Identity,
@@ -20,13 +20,6 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.audit import audited
 from app.core.database import Base
 from app.model.base import AuditMetadataMixin
-
-
-class OrgStatus(StrEnum):
-    ACTIVE = "ACTIVE"
-    DELETED = "DELETED"
-    DRAFT = "DRAFT"
-    INACTIVE = "INACTIVE"
 
 
 class OrganizationAud(Base):
@@ -73,7 +66,7 @@ class Organization(Base, AuditMetadataMixin):
         nullable=False,
     )
     description: Mapped[str | None] = mapped_column(Text(), nullable=True)
-    status: Mapped[OrgStatus | None] = mapped_column(
-        SQLEnum(OrgStatus, native_enum=False, length=50),
+    status: Mapped[OrganizationStatus | None] = mapped_column(
+        SQLEnum(OrganizationStatus, native_enum=False, length=50),
         nullable=True,
     )

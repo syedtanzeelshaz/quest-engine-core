@@ -7,8 +7,9 @@ without leaking sensitive credential attributes (e.g. password_hash).
 """
 from dataclasses import dataclass, field
 
+from registry.enums import UserStatus
+
 from app.core.primitives.enums import Experience
-from app.model.identity.app_user import AppUserStatus
 
 
 @dataclass(frozen=True)
@@ -30,7 +31,7 @@ class CurrentUser:
     id: int
     email: str
     experience: Experience
-    status: AppUserStatus
+    status: UserStatus
     first_name: str | None = None
     last_name: str | None = None
     roles: list[str] = field(default_factory=list)
@@ -46,7 +47,7 @@ class CurrentUser:
     @property
     def is_active(self) -> bool:
         """Check if user account status is ACTIVE."""
-        return self.status == AppUserStatus.ACTIVE
+        return self.status == UserStatus.ACTIVE
 
 
     @property

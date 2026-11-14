@@ -4,12 +4,14 @@ CurrentUserService — resolves and validates the authenticated user from access
 Coordinates token cryptographic verification with user account existence, status checks,
 and persona scope resolution (Customer / Operations).
 """
+from registry.enums import UserStatus
+
 from app.core.primitives.enums import Experience
 from app.core.primitives.exceptions import (
     UserNotActiveError,
     UserNotFoundError,
 )
-from app.model.identity.app_user import AppUser, AppUserStatus
+from app.model.identity.app_user import AppUser
 from app.repository.identity.app_user_repo import AppUserRepository
 from app.repository.identity.member_repo import MemberRepository
 from app.repository.identity.operator_repo import OperatorRepository
@@ -58,7 +60,7 @@ class CurrentUserService:
         if user is None:
             raise UserNotFoundError(f"User with id {user_id} does not exist.")
 
-        if user.status != AppUserStatus.ACTIVE:
+        if user.status != UserStatus.ACTIVE:
             raise UserNotActiveError(
                 f"User account is not active (status={user.status})."
             )
@@ -82,10 +84,10 @@ class CurrentUserService:
         )
         status = (
             user.status
-            if isinstance(user.status, AppUserStatus)
-            else AppUserStatus(user.status)
+            if isinstance(user.status, UserStatus)
+            else UserStatus(user.status)
             if user.status
-            else AppUserStatus.ACTIVE
+            else UserStatus.ACTIVE
         )
 
         if experience == Experience.OPERATIONS:

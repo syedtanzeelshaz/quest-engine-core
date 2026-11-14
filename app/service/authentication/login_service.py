@@ -4,10 +4,12 @@ LoginService — user authentication orchestration.
 Coordinates credential verification, account status check, persona role resolution,
 JWT token pair issuance, and refresh token persistence.
 """
+from registry.enums import UserStatus
+
 from app.core.primitives.enums import Experience
 from app.core.primitives.exceptions import InvalidCredentialsError, UserNotActiveError
 from app.core.transaction import transactional
-from app.model.identity.app_user import AppUser, AppUserStatus
+from app.model.identity.app_user import AppUser
 from app.model.identity.refresh_token import RefreshToken
 from app.repository.identity.app_user_repo import AppUserRepository
 from app.repository.identity.member_repo import MemberRepository
@@ -68,7 +70,7 @@ class LoginService:
         if not await self._password_service.verify(command.plain_password, user.password_hash):
             raise InvalidCredentialsError("Invalid email or password.")
 
-        if user.status != AppUserStatus.ACTIVE:
+        if user.status != UserStatus.ACTIVE:
             raise UserNotActiveError(
                 f"User account is not active (status={user.status})."
             )
