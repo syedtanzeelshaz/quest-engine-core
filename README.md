@@ -167,17 +167,25 @@ Security decisions are split cleanly between user identity resolution, Agent acc
    cp .env.example .env
    ```
 
-2. **Synchronize dependencies using `uv`:**
+2. **Configure Local Wheel Store for Schema Registry (Local Dev):**
+   `quest-engine-core` consumes the centralized GraphQL schema contract and domain enums from `qe-graph-registry`. For local development, point `uv` to your local wheel store by adding `UV_FIND_LINKS` to your shell profile:
+   ```bash
+   echo 'export UV_FIND_LINKS="$HOME/.qe/wheels"' >> ~/.zshrc
+   source ~/.zshrc
+   ```
+   *(In remote CI/CD and Docker builds, this step is omitted; `uv` instead resolves the wheel directly from the private package registry via `UV_EXTRA_INDEX_URL`).*
+
+3. **Synchronize dependencies using `uv`:**
    ```bash
    uv sync
    ```
 
-3. **Run the development server:**
+4. **Run the development server:**
    ```bash
    uv run dev
    ```
 
-4. **Run tests:**
+5. **Run tests:**
    ```bash
    uv run test
    # or

@@ -21,3 +21,7 @@ docs/
 .vscode/
 .idea/
 .agents/
+
+# Lockfile - ignored during local wheel iteration to prevent machine-specific paths from leaking
+# Once packages are published to remote registry (CodeArtifact/PyPI), remove from .gitignore and track uv.lock
+uv.lock
