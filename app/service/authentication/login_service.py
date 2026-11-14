@@ -4,7 +4,7 @@ LoginService — user authentication orchestration.
 Coordinates credential verification, account status check, persona role resolution,
 JWT token pair issuance, and refresh token persistence.
 """
-from registry.enums import UserStatus
+from questengine.registry.types import UserStatus
 
 from app.core.primitives.enums import Experience
 from app.core.primitives.exceptions import InvalidCredentialsError, UserNotActiveError

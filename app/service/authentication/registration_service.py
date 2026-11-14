@@ -4,7 +4,7 @@ RegistrationService — user registration orchestration.
 Coordinates email uniqueness check, password hashing, user creation,
 member persona provisioning (INDIVIDUAL status), and initial JWT token pair issuance.
 """
-from registry.enums import MemberStatus, OperatorStatus, UserStatus
+from questengine.registry.types import MemberStatus, OperatorStatus, UserStatus
 
 from app.core.primitives.enums import Experience
 from app.core.primitives.exceptions import EmailAlreadyExistsError

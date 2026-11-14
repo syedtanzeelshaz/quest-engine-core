@@ -7,7 +7,7 @@ Handles the full lifecycle of persisted refresh tokens:
 """
 from datetime import UTC, datetime
 
-from registry.enums import UserStatus
+from questengine.registry.types import UserStatus
 
 from app.core.primitives.enums import Experience
 from app.core.primitives.exceptions import InvalidRefreshTokenError

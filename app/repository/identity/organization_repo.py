@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-from registry.enums import MemberStatus
+from questengine.registry.types import MemberStatus
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 

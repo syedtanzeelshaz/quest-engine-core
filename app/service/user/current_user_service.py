@@ -2,9 +2,11 @@
 CurrentUserService — resolves and validates the authenticated user from access tokens.
 
 Coordinates token cryptographic verification with user account existence, status checks,
-and persona scope resolution (Customer / Operations).
+persona scope resolution (Customer / Operations), and active role permissions.
 """
-from registry.enums import UserStatus
+from __future__ import annotations
+
+from questengine.registry.types import UserStatus
 
 from app.core.primitives.enums import Experience
 from app.core.primitives.exceptions import (
@@ -15,6 +17,7 @@ from app.model.identity.app_user import AppUser
 from app.repository.identity.app_user_repo import AppUserRepository
 from app.repository.identity.member_repo import MemberRepository
 from app.repository.identity.operator_repo import OperatorRepository
+from app.repository.identity.role_repo import RoleRepository
 from app.service.authentication.token import TokenService
 from app.service.user.models import CurrentUser, UserScopes
 
@@ -28,12 +31,13 @@ class CurrentUserService:
         token_service: TokenService,
         member_repo: MemberRepository | None = None,
         operator_repo: OperatorRepository | None = None,
+        role_repo: RoleRepository | None = None,
     ) -> None:
         self._user_repo = user_repo
         self._token_service = token_service
         self._member_repo = member_repo if member_repo is not None else MemberRepository()
         self._operator_repo = operator_repo if operator_repo is not None else OperatorRepository()
-
+        self._role_repo = role_repo if role_repo is not None else RoleRepository()
 
     async def get_user_from_token(self, raw_token: str) -> CurrentUser:
         """
@@ -46,7 +50,6 @@ class CurrentUserService:
         """
         user_id = self._token_service.verify_access_token(raw_token)
         return await self.get_active_user_by_id(user_id)
-
 
     async def get_active_user_by_id(self, user_id: int) -> CurrentUser:
         """
@@ -67,9 +70,8 @@ class CurrentUserService:
 
         return await self._build_current_user(user)
 
-
     async def _build_current_user(self, user: AppUser) -> CurrentUser:
-        """Assemble the sanitized CurrentUser dataclass with persona details and scopes."""
+        """Assemble the sanitized CurrentUser dataclass with persona details, scopes, and permissions."""
         first_name: str | None = None
         last_name: str | None = None
         roles: list[str] = []
@@ -105,6 +107,11 @@ class CurrentUserService:
                 scopes = UserScopes(member_id=member.id, org_id=member.org_id)
             roles = await self._member_repo.find_roles_by_user_id(user.id)
 
+        # Resolve distinct permissions assigned to caller's roles in this experience
+        permissions: set[str] = set()
+        if roles:
+            permissions = await self._role_repo.find_permissions_by_roles(roles, experience.value)
+
         return CurrentUser(
             id=user.id,
             email=user.email,
@@ -113,6 +120,6 @@ class CurrentUserService:
             first_name=first_name,
             last_name=last_name,
             roles=roles,
+            permissions=permissions,
             scopes=scopes,
         )
-

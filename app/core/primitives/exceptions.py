@@ -57,3 +57,8 @@ class SlugAlreadyExistsError(Exception):
 
 class InvalidInputError(Exception):
     """Raised when user or domain input fails validation constraints."""
+
+
+class MemberNotFoundError(Exception):
+    """Raised when a member is not found by ID or other identifier."""
+

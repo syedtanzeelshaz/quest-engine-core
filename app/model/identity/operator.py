@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from registry.enums import OperatorStatus
+from questengine.registry.types import OperatorStatus
 from sqlalchemy import (
     BigInteger,
     ForeignKey,

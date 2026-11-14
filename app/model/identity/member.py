@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
-from registry.enums import MemberStatus
+from questengine.registry.types import MemberStatus
 from sqlalchemy import (
     BigInteger,
     Date,

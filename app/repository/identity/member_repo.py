@@ -1,6 +1,7 @@
-from registry.enums import MemberStatus
+from questengine.registry.types import MemberStatus
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.model.identity.member import Member
 from app.model.identity.member_role import MemberRole
@@ -13,6 +14,17 @@ class MemberRepository(BaseRepository[Member]):
 
     def __init__(self, session: AsyncSession | None = None) -> None:
         super().__init__(Member, session)
+
+
+    async def find_by_id_with_roles(self, member_id: int) -> Member | None:
+        """Fetch a member persona by primary key with roles pre-loaded."""
+        stmt = (
+            select(Member)
+            .options(selectinload(Member.roles))
+            .where(Member.id == member_id)
+            .limit(1)
+        )
+        return await self.session.scalar(stmt)
 
 
     async def find_by_user_id(self, user_id: int) -> Member | None:

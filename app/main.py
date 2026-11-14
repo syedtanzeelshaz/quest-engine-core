@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import app.model
 from app import __version__
 from app.api.exception_handlers import register_exception_handlers
+from app.api.graphql.router import graphql_app
 from app.api.rest.routes import auth, health
 from app.core.bootstrap import run_startup_checks
 from app.core.database import DatabaseSessionMiddleware, engine
@@ -48,6 +49,9 @@ def create_app() -> FastAPI:
 
     # REST API routes
     app.include_router(auth.router, prefix="/api/v1")
+
+    # GraphQL endpoint (Ariadne ASGI application)
+    app.mount("/graphql", graphql_app)
 
     return app
 

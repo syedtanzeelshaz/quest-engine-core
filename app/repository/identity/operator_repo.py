@@ -1,4 +1,4 @@
-from registry.enums import OperatorStatus
+from questengine.registry.types import OperatorStatus
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
