@@ -1,7 +1,6 @@
 """
-Member data fetchers (GraphQL query and child field resolvers).
-Uses GraphConstants for type-safe resolver bindings without arbitrary resolve_ prefixes.
-Mirrors Spring DGS @DgsQuery and @DgsData(parentType = "Member", field = "roles").
+Member data fetchers.
+Provides query and child field resolvers for Member domain operations.
 """
 from __future__ import annotations
 
@@ -39,7 +38,7 @@ async def roles(
     info: GraphQLResolveInfo,
 ) -> list[RoleGraphQL]:
     """
-    Child field resolver for Member.roles (mirroring DGS @DgsData).
+    Child field resolver for Member.roles.
     Delegates to MemberDataLoader to batch role fetching across members and eliminate N+1 queries.
     """
     context: GraphQLContext = info.context

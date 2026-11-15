@@ -1,7 +1,6 @@
 """
 Member data loader.
 Encapsulates batch-loading operations for the Member domain to eliminate N+1 queries.
-Mirrors the Spring DGS @DgsDataLoader pattern.
 """
 from __future__ import annotations
 
