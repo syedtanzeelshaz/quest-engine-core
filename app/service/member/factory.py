@@ -10,11 +10,13 @@ from __future__ import annotations
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repository.identity.member_repo import MemberRepository
+from app.repository.identity.role_repo import RoleRepository
 from app.service.member.member_service import MemberService
 
 
 def build_member_service(session: AsyncSession | None = None) -> MemberService:
-    """Construct a MemberService wired with MemberRepository."""
+    """Construct a MemberService wired with MemberRepository and RoleRepository."""
     return MemberService(
         member_repo=MemberRepository(session),
+        role_repo=RoleRepository(session),
     )

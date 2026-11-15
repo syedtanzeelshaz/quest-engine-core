@@ -24,8 +24,10 @@ class AuthorizeDirective(SchemaDirectiveVisitor):
     def visit_object(self, object_type: Any) -> Any:
         return object_type
 
+
     def visit_input_field_definition(self, field: Any, object_type: Any) -> Any:
         return field
+
 
     def visit_field_definition(self, field: GraphQLField, object_type: Any) -> GraphQLField:
         original_resolver = field.resolve or default_field_resolver

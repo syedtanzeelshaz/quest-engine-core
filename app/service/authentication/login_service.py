@@ -116,4 +116,5 @@ class LoginService:
             expires_at=expires_at,
             is_revoked=False,
         )
+
         await self._refresh_token_repo.save_and_flush(refresh_token)

@@ -39,6 +39,7 @@ class CurrentUserService:
         self._operator_repo = operator_repo if operator_repo is not None else OperatorRepository()
         self._role_repo = role_repo if role_repo is not None else RoleRepository()
 
+
     async def get_user_from_token(self, raw_token: str) -> CurrentUser:
         """
         Verify an access token and return the sanitized active CurrentUser context.
@@ -49,7 +50,9 @@ class CurrentUserService:
             UserNotActiveError: If the user account exists but is not ACTIVE.
         """
         user_id = self._token_service.verify_access_token(raw_token)
+
         return await self.get_active_user_by_id(user_id)
+
 
     async def get_active_user_by_id(self, user_id: int) -> CurrentUser:
         """
@@ -69,6 +72,7 @@ class CurrentUserService:
             )
 
         return await self._build_current_user(user)
+
 
     async def _build_current_user(self, user: AppUser) -> CurrentUser:
         """Assemble the sanitized CurrentUser dataclass with persona details, scopes, and permissions."""

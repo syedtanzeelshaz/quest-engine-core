@@ -7,8 +7,8 @@ without leaking sensitive credential attributes (e.g. password_hash).
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 from collections.abc import Iterable
+from dataclasses import dataclass, field
 
 from questengine.registry.types import UserStatus
 
@@ -42,44 +42,53 @@ class CurrentUser:
     permissions: set[str] = field(default_factory=set)
     scopes: UserScopes = field(default_factory=UserScopes)
 
+
     @property
     def full_name(self) -> str:
         """Formatted full name of the user."""
         return f"{self.first_name or ''} {self.last_name or ''}".strip()
+
 
     @property
     def is_active(self) -> bool:
         """Check if user account status is ACTIVE."""
         return self.status == UserStatus.ACTIVE
 
+
     @property
     def is_operations(self) -> bool:
         """Check if user experience is OPERATIONS."""
         return self.experience == Experience.OPERATIONS
+
 
     @property
     def is_customer(self) -> bool:
         """Check if user experience is CUSTOMER."""
         return self.experience == Experience.CUSTOMER
 
+
     @property
     def org_id(self) -> int | None:
         """Convenience accessor for organization ID from scopes."""
         return self.scopes.org_id
+
 
     @property
     def member_id(self) -> int | None:
         """Convenience accessor for member ID from scopes."""
         return self.scopes.member_id
 
+
     @property
     def operator_id(self) -> int | None:
         """Convenience accessor for operator ID from scopes."""
         return self.scopes.operator_id
 
+
     def has_permission(self, permission: str) -> bool:
         """Check if caller's assigned permissions satisfy the required permission string."""
         return has_matching_permission(self.permissions, permission)
+
 
     def has_any_permission(self, permissions: Iterable[str]) -> bool:
         """Check if caller's assigned permissions satisfy any of the required permission strings."""
